@@ -33,17 +33,18 @@ class GroupListAdapter internal constructor(context: Context) : RecyclerView.Ada
         val current = groups[position]
         holder.groupItemView.text = current.Name
         holder.groupItemView.setOnClickListener {
-            Log.d("DEBUG", "Attempting to toggle...")
             holder.groupExpandView.toggle()
         }
         val tasks = current.Items.split('/')
         val taskobjs: MutableList<Task> = ArrayList()
         for (task in tasks){
             val tasksplit = task.split(',')
-            Log.i("OOTHERINFO", task)
             if (tasksplit[0] != "NONE") {
                 taskobjs.add(Task(tasksplit[0].toInt(), tasksplit[1], tasksplit[2].toBoolean()))
             }
+        }
+        if(taskobjs.isEmpty()) {
+            holder.groupItemView.text = current.Name + " (Empty)"
         }
         val taskAdapter = TaskListAdapter(holder.itemViewer.context)
         taskAdapter.setTasks(taskobjs)

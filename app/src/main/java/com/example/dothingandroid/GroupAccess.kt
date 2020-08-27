@@ -14,6 +14,9 @@ interface GroupAccess {
     @Query("SELECT * from GroupTable WHERE Name = :groupname")
     fun GetGroupByName(groupname: String): LiveData<Group>
 
+    @Query("SELECT * from GroupTable WHERE Name = :groupname")
+    fun GetRawGroupByName(groupname: String): Group
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(group: Group)
 
@@ -21,6 +24,12 @@ interface GroupAccess {
     suspend fun deleteAll()
 
     @Query("SELECT MAX(Position) FROM GroupTable")
-    fun GetHighestPos(): LiveData<Int>
+    fun GetHighestPos(): Int
+
+    @Query("DELETE FROM GroupTable WHERE Name = :groupname")
+    fun RemoveGroup(groupname: String)
+
+    @Query("UPDATE GroupTable SET Position = :newpos WHERE Name = :groupname")
+    fun UpdatePos(groupname: String, newpos: Int)
 
 }

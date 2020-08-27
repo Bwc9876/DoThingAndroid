@@ -54,6 +54,14 @@ class Connection(in_address: String, in_port: Int) {
         return out
     }
 
+    fun SendList(endcode: String, list: List<String>){
+        for (item in list){
+            send(item)
+            WaitUntilRecv()
+        }
+        send(endcode)
+    }
+
     fun dc() {
         s.close()
     }

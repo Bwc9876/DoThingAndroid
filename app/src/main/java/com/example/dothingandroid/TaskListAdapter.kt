@@ -21,7 +21,6 @@ class TaskListAdapter internal constructor(context: Context) : RecyclerView.Adap
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
         val itemView = inflater.inflate(R.layout.recyclertask, parent, false)
-        Log.d("DEBUG", "Monkey TIME")
         return TaskViewHolder(itemView)
     }
 

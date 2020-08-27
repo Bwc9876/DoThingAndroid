@@ -48,4 +48,25 @@ class DBManager {
         return out
     }
 
+    fun PushGroup(ip: String, port: Int, username: String, group: String, token: String, viewDB: GroupViewModel){
+        GlobalScope.launch{
+
+            val con = Connection(ip, port)
+            con.send("W/$username/$group/$token/JAVA")
+            val returned: String? = con.recv()
+            if (returned == "IT") {
+                Log.e("ERROR", "Invalid Token")
+            } else if (returned == "IU") {
+                Log.e("ERROR", "Invalid User")
+            }
+            con.send("Ready")
+            val tasksraw = viewDB.GetGroupDAO().GetRawGroupByName(group).Items
+            val pos = viewDB.GetHighestId() + 1
+            viewDB.GetGroupDAO().UpdatePos(group, pos)
+            val tasks = (pos.toString() + "/" + tasksraw).split("/")
+            con.SendList("END", tasks)
+            con.dc()
+        }
+    }
+
 }
