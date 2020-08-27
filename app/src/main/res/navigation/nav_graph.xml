@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/Splash">
+
+    <fragment
+        android:id="@+id/Splash"
+        android:name="com.example.dothingandroid.FirstFragment"
+        android:label="@string/first_fragment_label"
+        tools:layout="@layout/fragment_first">
+        <action
+            android:id="@+id/action_Splash_to_Register"
+            app:destination="@id/Register" />
+        <action
+            android:id="@+id/action_Splash_to_Login"
+            app:destination="@id/Login" />
+        <action
+            android:id="@+id/action_Splash_to_tasks"
+            app:destination="@id/tasks" />
+    </fragment>
+    <fragment
+        android:id="@+id/Login"
+        android:name="com.example.dothingandroid.SecondFragment"
+        android:label="@string/hello_second_fragment"
+        tools:layout="@layout/fragment_second">
+        <action
+            android:id="@+id/action_Login_to_Splash"
+            app:destination="@id/Splash" />
+    </fragment>
+    <fragment
+        android:id="@+id/Register"
+        android:name="com.example.dothingandroid.Register"
+        android:label="@string/RegisterAction"
+        tools:layout="@layout/register">
+        <action
+            android:id="@+id/action_Register_to_Splash"
+            app:destination="@id/Splash" />
+    </fragment>
+    <fragment
+        android:id="@+id/tasks"
+        android:name="com.example.dothingandroid.Tasks"
+        android:label="fragment_tasks"
+        tools:layout="@layout/fragment_tasks" />
+</navigation>

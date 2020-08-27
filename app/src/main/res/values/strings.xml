@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Do Thing Android</string>
+    <string name="action_settings">Settings</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Login</string>
+    <string name="previous">Previous</string>
+    <string name="RegisterAction">Register</string>
+    <string name="hello_first_fragment">Welcome</string>
+    <string name="EnterUser">Username</string>
+    <string name="EnterPassword">Password</string>
+    <string name="hello_second_fragment">Login</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="UserTasks">Your Tasks</string>
+    <string name="add_group">Add Group</string>
+    <string name="hint_group">Group</string>
+    <string name="button_save">Save</string>
+    <string name="empty_not_saved">Empty Group</string>
+</resources>
