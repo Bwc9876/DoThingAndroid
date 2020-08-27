@@ -1,7 +1,6 @@
 package com.example.dothingandroid
 
 import android.util.Log
-import kotlin.concurrent.thread
 import kotlinx.coroutines.*
 
 class DBManager {
@@ -9,30 +8,44 @@ class DBManager {
     fun PopulateDB(ip: String, port: Int, username: String, group: String, token: String, groupDAO: GroupAccess){
         GlobalScope.launch {
             val con = Connection(ip, port)
-            Log.d("DEBUG", "Sending Initial Auth Request")
             con.send("G/$username/$group/$token/JAVA")
             val returned: String? = con.recv()
-            Log.d("DEBUG", "Received Reply To Auth Request")
             if (returned == "IT") {
                 Log.e("ERROR", "Invalid Token")
             } else if (returned == "IU") {
                 Log.e("ERROR", "Invalid User")
             }
-            Log.d("DEBUG", "Authenticated")
             con.send("Ready")
             val out: List<String?> = con.RecvList("GO", "END")
             con.dc()
-            Log.d("DEBUG", "Connection Closed")
-            Log.d("DEBUG", "Printing List Of Groupss")
 
             for (task in out) {
                 task?.let {
                     Log.d("DEBUG", it)
-                    groupDAO.insert(Group(it, 234, ""))
+                    val items = NON_SAFE_GetTasks(ip, port, username, it, token)
+                    Log.i("INFO", items.joinToString(separator="/"))
+                    val position = items.removeFirst().toInt()
+                    val itemstring = items.joinToString(separator="/")
+                    groupDAO.insert(Group(it, position, itemstring))
                 }
             }
 
         }
+    }
+
+    fun NON_SAFE_GetTasks(ip: String, port: Int, username: String, group: String, token: String): MutableList<String>{
+        val con = Connection(ip, port)
+        con.send("R/$username/$group/$token/JAVA")
+        val returned: String? = con.recv()
+        if (returned == "IT") {
+            Log.e("ERROR", "Invalid Token")
+        } else if (returned == "IU") {
+            Log.e("ERROR", "Invalid User")
+        }
+        con.send("Ready")
+        val out: MutableList<String> = con.RecvList("GO", "END")
+        con.dc()
+        return out
     }
 
 }

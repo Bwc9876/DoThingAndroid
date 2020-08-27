@@ -4,12 +4,16 @@ import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import net.cachapa.expandablelayout.ExpandableLayout
+import org.w3c.dom.Attr
 
 class TaskList : AppCompatActivity() {
 
@@ -36,6 +40,7 @@ class TaskList : AppCompatActivity() {
             startActivityForResult(intent, GroupAddActivityRequestCode)
         }
 
+
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -55,6 +60,7 @@ class TaskList : AppCompatActivity() {
                 Toast.LENGTH_LONG
             ).show()
         }
+
 
     }
 }

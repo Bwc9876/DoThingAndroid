@@ -1,11 +1,15 @@
 package com.example.dothingandroid
 
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import net.cachapa.expandablelayout.ExpandableLayout
+
 
 class GroupListAdapter internal constructor(context: Context) : RecyclerView.Adapter<GroupListAdapter.GroupViewHolder>() {
 
@@ -14,6 +18,10 @@ class GroupListAdapter internal constructor(context: Context) : RecyclerView.Ada
 
     inner class GroupViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val groupItemView: TextView = itemView.findViewById(R.id.textView)
+        val groupExpandView: ExpandableLayout = itemView.findViewById(R.id.expandable_layout)
+        val group: ViewGroup = itemView.findViewById(R.id.expandable_layout) as ViewGroup
+        val itemViewer: View = itemView
+        val recyclerView: RecyclerView = itemView.findViewById(R.id.recyclerviewtasks)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GroupViewHolder {
@@ -24,6 +32,23 @@ class GroupListAdapter internal constructor(context: Context) : RecyclerView.Ada
     override fun onBindViewHolder(holder: GroupViewHolder, position: Int) {
         val current = groups[position]
         holder.groupItemView.text = current.Name
+        holder.groupItemView.setOnClickListener {
+            Log.d("DEBUG", "Attempting to toggle...")
+            holder.groupExpandView.toggle()
+        }
+        val tasks = current.Items.split('/')
+        val taskobjs: MutableList<Task> = ArrayList()
+        for (task in tasks){
+            val tasksplit = task.split(',')
+            Log.i("OOTHERINFO", task)
+            if (tasksplit[0] != "NONE") {
+                taskobjs.add(Task(tasksplit[0].toInt(), tasksplit[1], tasksplit[2].toBoolean()))
+            }
+        }
+        val taskAdapter = TaskListAdapter(holder.itemViewer.context)
+        taskAdapter.setTasks(taskobjs)
+        holder.recyclerView.adapter = taskAdapter
+        holder.recyclerView.layoutManager = LinearLayoutManager(holder.itemViewer.context)
     }
 
     internal fun setGroups(groups: List<Group>) {
