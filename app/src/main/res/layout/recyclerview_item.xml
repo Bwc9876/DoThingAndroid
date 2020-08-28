@@ -1,47 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/GroupParent"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/textView"
         style="@style/group_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/holo_green_light"/>
+        android:background="@android:color/holo_green_light"
+        android:textSize="30sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <net.cachapa.expandablelayout.ExpandableLayout
         android:id="@+id/expandable_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:el_duration="500"
+        app:el_duration="425"
         app:el_expanded="true"
-        app:el_parallax="0.5">
+        app:el_parallax="0.1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerviewtasks"
-            android:layout_height="match_parent"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            tools:listitem="@layout/recyclertask"
-            android:padding="@dimen/big_padding"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_height="wrap_content">
 
-    </LinearLayout>
+            <Button
+                android:id="@+id/button_task_add"
+                style="@style/Widget.AppCompat.Button.Colored"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/task_add"
+                android:visibility="visible"
+                app:layout_constraintBottom_toTopOf="@+id/recyclerviewtasks"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.82" />
+
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerviewtasks"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="@dimen/standard_105"
+                android:padding="@dimen/big_padding"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.0"
+                tools:listitem="@layout/recyclertask" />
+
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </net.cachapa.expandablelayout.ExpandableLayout>
-
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

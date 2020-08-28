@@ -14,8 +14,10 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="UserTasks">Your Tasks</string>
     <string name="add_group">Add Group</string>
-    <string name="hint_group">Group</string>
+    <string name="hint_group">Group Name</string>
     <string name="button_save">Save</string>
-    <string name="empty_not_saved">Empty Group</string>
+    <string name="empty_not_saved">Empty Name Field</string>
     <string name="EmptyList">(Empty)</string>
+    <string name="hint_task">Task Name</string>
+    <string name="task_add">Add Task</string>
 </resources>

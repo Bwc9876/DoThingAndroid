@@ -50,7 +50,6 @@ class DBManager {
 
     fun PushGroup(ip: String, port: Int, username: String, group: String, token: String, viewDB: GroupViewModel){
         GlobalScope.launch{
-
             val con = Connection(ip, port)
             con.send("W/$username/$group/$token/JAVA")
             val returned: String? = con.recv()
@@ -66,6 +65,34 @@ class DBManager {
             val tasks = (pos.toString() + "/" + tasksraw).split("/")
             con.SendList("END", tasks)
             con.dc()
+        }
+    }
+
+    fun NON_SAFE_PushGroup(ip: String, port: Int, username: String, group: String, token: String, viewDB: GroupViewModel){
+        val con = Connection(ip, port)
+        con.send("W/$username/$group/$token/JAVA")
+        val returned: String? = con.recv()
+        if (returned == "IT") {
+            Log.e("ERROR", "Invalid Token")
+        } else if (returned == "IU") {
+            Log.e("ERROR", "Invalid User")
+        }
+        con.send("Ready")
+        var tasksraw = viewDB.GetGroupDAO().GetRawGroupByName(group).Items
+        val gpos = viewDB.GetGroupDAO().GetRawGroupByName(group).Position
+        tasksraw = gpos.toString() + "/" + tasksraw
+        val tasks = tasksraw.split("/")
+        con.SendList("END", tasks)
+        con.dc()
+    }
+
+    fun AddTask(ip: String, port: Int, username: String, group: String, token: String, viewDB: GroupViewModel, newtask: Task){
+        GlobalScope.launch {
+            val g = viewDB.GetGroupDAO().GetRawGroupByName(group)
+            var items = g.Items
+            items = items + "/" + newtask.ConSelfToString()
+            viewDB.GetGroupDAO().UpdateItems(group, items)
+            NON_SAFE_PushGroup(ip, port, username, group, token, viewDB)
         }
     }
 

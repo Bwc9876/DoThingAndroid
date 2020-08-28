@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -13,12 +14,16 @@ import net.cachapa.expandablelayout.ExpandableLayout
 
 class GroupListAdapter internal constructor(context: Context) : RecyclerView.Adapter<GroupListAdapter.GroupViewHolder>() {
 
+    private var mContext: Context? = null
     private val inflater: LayoutInflater = LayoutInflater.from(context)
     private var groups = emptyList<Group>()
+
+    private val TaskAddActivityRequestCode = 2
 
     inner class GroupViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val groupItemView: TextView = itemView.findViewById(R.id.textView)
         val groupExpandView: ExpandableLayout = itemView.findViewById(R.id.expandable_layout)
+        val groupAddTaskButton: Button = itemView.findViewById(R.id.button_task_add)
         val group: ViewGroup = itemView.findViewById(R.id.expandable_layout) as ViewGroup
         val itemViewer: View = itemView
         val recyclerView: RecyclerView = itemView.findViewById(R.id.recyclerviewtasks)
@@ -29,9 +34,19 @@ class GroupListAdapter internal constructor(context: Context) : RecyclerView.Ada
         return GroupViewHolder(itemView)
     }
 
+    fun GroupListAdapter(context: Context){
+        this.mContext = context
+    }
+
     override fun onBindViewHolder(holder: GroupViewHolder, position: Int) {
         val current = groups[position]
         holder.groupItemView.text = current.Name
+        holder.groupAddTaskButton.setOnClickListener {
+            Log.d("DEBUG", mContext.toString())
+            if (mContext is TaskList) {
+                (mContext as TaskList).StartTaskAdd(current.Name)
+            }
+        }
         holder.groupItemView.setOnClickListener {
             holder.groupExpandView.toggle()
         }
