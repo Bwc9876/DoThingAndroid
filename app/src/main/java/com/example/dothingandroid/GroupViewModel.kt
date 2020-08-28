@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class GroupViewModel(application: Application) : AndroidViewModel(application){
+class GroupViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: UserDataRepo
 
@@ -26,11 +26,11 @@ class GroupViewModel(application: Application) : AndroidViewModel(application){
         repository.insert(group)
     }
 
-    fun GetGroupDAO(): GroupAccess{
+    fun GetGroupDAO(): GroupAccess {
         return GroupAccess
     }
 
-    fun GetHighestId(): Int{
+    fun GetHighestId(): Int {
         Log.d("DEBUG", GroupAccess.GetHighestPos().toString())
         return GroupAccess.GetHighestPos()
     }

@@ -9,8 +9,7 @@ import android.widget.Button
 import androidx.fragment.app.Fragment
 
 
-class SecondFragment : Fragment(){
-
+class SecondFragment : Fragment() {
 
 
     override fun onCreateView(

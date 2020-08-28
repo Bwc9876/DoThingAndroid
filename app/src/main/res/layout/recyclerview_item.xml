@@ -66,7 +66,6 @@
                 tools:listitem="@layout/recyclertask" />
 
 
-
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </net.cachapa.expandablelayout.ExpandableLayout>

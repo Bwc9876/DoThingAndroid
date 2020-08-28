@@ -1,11 +1,19 @@
 package com.example.dothingandroid
 
 import android.util.Log
-import kotlinx.coroutines.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class DBManager {
 
-    fun PopulateDB(ip: String, port: Int, username: String, group: String, token: String, groupDAO: GroupAccess){
+    fun PopulateDB(
+        ip: String,
+        port: Int,
+        username: String,
+        group: String,
+        token: String,
+        groupDAO: GroupAccess
+    ) {
         GlobalScope.launch {
             val con = Connection(ip, port)
             con.send("G/$username/$group/$token/JAVA")
@@ -23,9 +31,9 @@ class DBManager {
                 task?.let {
                     Log.d("DEBUG", it)
                     val items = NON_SAFE_GetTasks(ip, port, username, it, token)
-                    Log.i("INFO", items.joinToString(separator="/"))
+                    Log.i("INFO", items.joinToString(separator = "/"))
                     val position = items.removeFirst().toInt()
-                    val itemstring = items.joinToString(separator="/")
+                    val itemstring = items.joinToString(separator = "/")
                     groupDAO.insert(Group(it, position, itemstring))
                 }
             }
@@ -33,7 +41,13 @@ class DBManager {
         }
     }
 
-    fun NON_SAFE_GetTasks(ip: String, port: Int, username: String, group: String, token: String): MutableList<String>{
+    fun NON_SAFE_GetTasks(
+        ip: String,
+        port: Int,
+        username: String,
+        group: String,
+        token: String
+    ): MutableList<String> {
         val con = Connection(ip, port)
         con.send("R/$username/$group/$token/JAVA")
         val returned: String? = con.recv()
@@ -48,7 +62,14 @@ class DBManager {
         return out
     }
 
-    fun AddGroup(ip: String, port: Int, username: String, group: String, token: String, viewDB: GroupViewModel){
+    fun AddGroup(
+        ip: String,
+        port: Int,
+        username: String,
+        group: String,
+        token: String,
+        viewDB: GroupViewModel
+    ) {
         GlobalScope.launch {
             val newpos = viewDB.GetHighestId() + 1
             viewDB.GetGroupDAO().UpdatePos(group, newpos)
@@ -56,8 +77,15 @@ class DBManager {
         }
     }
 
-    fun PushGroup(ip: String, port: Int, username: String, group: String, token: String, viewDB: GroupViewModel){
-        GlobalScope.launch{
+    fun PushGroup(
+        ip: String,
+        port: Int,
+        username: String,
+        group: String,
+        token: String,
+        viewDB: GroupViewModel
+    ) {
+        GlobalScope.launch {
             val con = Connection(ip, port)
             con.send("W/$username/$group/$token/JAVA")
             val returned: String? = con.recv()
@@ -76,7 +104,14 @@ class DBManager {
         }
     }
 
-    fun NON_SAFE_PushGroup(ip: String, port: Int, username: String, group: String, token: String, viewDB: GroupViewModel){
+    fun NON_SAFE_PushGroup(
+        ip: String,
+        port: Int,
+        username: String,
+        group: String,
+        token: String,
+        viewDB: GroupViewModel
+    ) {
         val con = Connection(ip, port)
         con.send("W/$username/$group/$token/JAVA")
         val returned: String? = con.recv()
@@ -95,7 +130,15 @@ class DBManager {
         con.dc()
     }
 
-    fun AddTask(ip: String, port: Int, username: String, group: String, token: String, viewDB: GroupViewModel, newtask: Task){
+    fun AddTask(
+        ip: String,
+        port: Int,
+        username: String,
+        group: String,
+        token: String,
+        viewDB: GroupViewModel,
+        newtask: Task
+    ) {
         GlobalScope.launch {
             val g = viewDB.GetGroupDAO().GetRawGroupByName(group)
             var items = g.Items
@@ -105,7 +148,7 @@ class DBManager {
         }
     }
 
-    fun RemoveNonDigits(instr: String): String{
+    fun RemoveNonDigits(instr: String): String {
         var outstr = instr
         val out: MutableList<String> = ArrayList()
         out.add("0")
@@ -118,32 +161,42 @@ class DBManager {
         out.add("7")
         out.add("8")
         out.add("9")
-        for (ch in outstr){
-            if (!out.contains(ch.toString())){
+        for (ch in outstr) {
+            if (!out.contains(ch.toString())) {
                 outstr = outstr.replace(ch.toString(), "")
             }
         }
         return outstr
     }
 
-    fun ConstructTask(taskstring: String): Task{
+    fun ConstructTask(taskstring: String): Task {
         val taskvalues = taskstring.split(",")
-        return Task(RemoveNonDigits(taskvalues[0]).toInt(), taskvalues[1], taskvalues[2].toBoolean())
+        return Task(
+            RemoveNonDigits(taskvalues[0]).toInt(),
+            taskvalues[1],
+            taskvalues[2].toBoolean()
+        )
     }
 
-    fun ConstructTaskList(taskstring: String): MutableList<Task>{
+    fun ConstructTaskList(taskstring: String): MutableList<Task> {
         val out: MutableList<Task> = ArrayList()
         val taskrawstringlist = taskstring.split("/")
-        for (taskstringraw in taskrawstringlist){
+        for (taskstringraw in taskrawstringlist) {
             val taskvalues = taskstringraw.split(",")
-            out.add(Task(RemoveNonDigits(taskvalues[0]).toInt(), taskvalues[1], taskvalues[2].toBoolean()))
+            out.add(
+                Task(
+                    RemoveNonDigits(taskvalues[0]).toInt(),
+                    taskvalues[1],
+                    taskvalues[2].toBoolean()
+                )
+            )
         }
         return out
     }
 
-    fun FindItemFromListById(id: Int, tasklist: MutableList<Task>) : Task{
-        for (i in tasklist){
-            if (i.id == id){
+    fun FindItemFromListById(id: Int, tasklist: MutableList<Task>): Task {
+        for (i in tasklist) {
+            if (i.id == id) {
                 return i
             }
         }
@@ -152,24 +205,28 @@ class DBManager {
 
     }
 
-    fun DeconstructTaskList(tasklist: MutableList<Task>): String{
+    fun DeconstructTaskList(tasklist: MutableList<Task>): String {
         val taskrawlist: MutableList<String> = ArrayList()
-        for (i in tasklist){
+        for (i in tasklist) {
             taskrawlist.add(i.ConSelfToString())
         }
         val out1 = taskrawlist.joinToString("/")
         return out1
     }
 
-    fun NON_SAFE_GetTaskByID(group: String, viewDB: GroupViewModel, taskname: String): MutableList<String>{
+    fun NON_SAFE_GetTaskByID(
+        group: String,
+        viewDB: GroupViewModel,
+        taskname: String
+    ): MutableList<String> {
         val outlist: MutableList<String> = ArrayList()
         var out: Task = Task(-1, "ERROR", false)
         var pos: Int = -1
         val DAO = viewDB.GetGroupDAO()
         val groupobj = DAO.GetRawGroupByName(group)
         val tasks = ConstructTaskList(groupobj.Items)
-        for (task in tasks){
-            if (task.id.toString() == taskname){
+        for (task in tasks) {
+            if (task.id.toString() == taskname) {
                 out = task
                 pos = tasks.indexOf(task)
             }
@@ -180,7 +237,16 @@ class DBManager {
 
     }
 
-    fun ToggleTask(ip: String, port: Int, username: String, group: String, token: String, viewDB: GroupViewModel, taskname: String, done: Boolean){
+    fun ToggleTask(
+        ip: String,
+        port: Int,
+        username: String,
+        group: String,
+        token: String,
+        viewDB: GroupViewModel,
+        taskname: String,
+        done: Boolean
+    ) {
         GlobalScope.launch {
             val groupchange = viewDB.GetGroupDAO().GetRawGroupByName(group)
             val items_string = groupchange.Items

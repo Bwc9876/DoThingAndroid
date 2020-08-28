@@ -12,7 +12,8 @@ import androidx.recyclerview.widget.RecyclerView
 import net.cachapa.expandablelayout.ExpandableLayout
 
 
-class GroupListAdapter internal constructor(context: Context) : RecyclerView.Adapter<GroupListAdapter.GroupViewHolder>() {
+class GroupListAdapter internal constructor(context: Context) :
+    RecyclerView.Adapter<GroupListAdapter.GroupViewHolder>() {
 
     private var mContext: Context? = null
     private val inflater: LayoutInflater = LayoutInflater.from(context)
@@ -34,7 +35,7 @@ class GroupListAdapter internal constructor(context: Context) : RecyclerView.Ada
         return GroupViewHolder(itemView)
     }
 
-    fun GroupListAdapter(context: Context){
+    fun GroupListAdapter(context: Context) {
         this.mContext = context
     }
 
@@ -52,13 +53,13 @@ class GroupListAdapter internal constructor(context: Context) : RecyclerView.Ada
         }
         val tasks = current.Items.split('/')
         val taskobjs: MutableList<Task> = ArrayList()
-        for (task in tasks){
+        for (task in tasks) {
             val tasksplit = task.split(',')
             if (tasksplit[0] != "NONE") {
                 taskobjs.add(Task(tasksplit[0].toInt(), tasksplit[1], tasksplit[2].toBoolean()))
             }
         }
-        if(taskobjs.isEmpty()) {
+        if (taskobjs.isEmpty()) {
             holder.groupItemView.text = current.Name + " (Empty)"
         }
         val taskAdapter = TaskListAdapter(holder.itemViewer.context)

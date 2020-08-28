@@ -2,12 +2,12 @@ package com.example.dothingandroid
 
 import android.app.Activity
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.TextUtils
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 
 class TaskAddActivity : AppCompatActivity() {
 
@@ -31,8 +31,7 @@ class TaskAddActivity : AppCompatActivity() {
             val replyIntent = Intent()
             if (TextUtils.isEmpty(editGroupView.text)) {
                 setResult(Activity.RESULT_CANCELED, replyIntent)
-            }
-            else {
+            } else {
                 val task = editGroupView.text.toString()
                 replyIntent.putExtra(EXTRA_REPLY, "$task/$parent_group")
                 setResult(Activity.RESULT_OK, replyIntent)

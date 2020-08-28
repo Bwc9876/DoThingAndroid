@@ -2,17 +2,15 @@ package com.example.dothingandroid
 
 
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Switch
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.switchmaterial.SwitchMaterial
 
 
-class TaskListAdapter internal constructor(context: Context) : RecyclerView.Adapter<TaskListAdapter.TaskViewHolder>()  {
+class TaskListAdapter internal constructor(context: Context) :
+    RecyclerView.Adapter<TaskListAdapter.TaskViewHolder>() {
 
 
     private var mContext: Context? = null
@@ -24,7 +22,7 @@ class TaskListAdapter internal constructor(context: Context) : RecyclerView.Adap
         val groupItemView: SwitchMaterial = itemView.findViewById(R.id.task_text)
     }
 
-    fun TaskListAdapter(context: Context?){
+    fun TaskListAdapter(context: Context?) {
         this.mContext = context
     }
 
@@ -40,7 +38,11 @@ class TaskListAdapter internal constructor(context: Context) : RecyclerView.Adap
 
         holder.groupItemView.setOnClickListener {
             if (mContext is TaskList) {
-                (mContext as TaskList).ToggleDone(groupName, current.id.toString(), holder.groupItemView.isChecked)
+                (mContext as TaskList).ToggleDone(
+                    groupName,
+                    current.id.toString(),
+                    holder.groupItemView.isChecked
+                )
             }
         }
 
@@ -51,7 +53,7 @@ class TaskListAdapter internal constructor(context: Context) : RecyclerView.Adap
         notifyDataSetChanged()
     }
 
-    fun updateGroup(group: String){
+    fun updateGroup(group: String) {
         groupName = group
     }
 

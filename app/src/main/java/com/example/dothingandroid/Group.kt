@@ -6,4 +6,8 @@ import androidx.room.PrimaryKey
 
 
 @Entity(tableName = "GroupTable")
-data class Group(@PrimaryKey @ColumnInfo(name = "Name") val Name: String, val Position: Int, val Items: String)
+data class Group(
+    @PrimaryKey @ColumnInfo(name = "Name") val Name: String,
+    val Position: Int,
+    val Items: String
+)

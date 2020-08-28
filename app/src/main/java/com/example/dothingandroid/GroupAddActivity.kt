@@ -2,11 +2,11 @@ package com.example.dothingandroid
 
 import android.app.Activity
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.TextUtils
 import android.widget.Button
 import android.widget.EditText
+import androidx.appcompat.app.AppCompatActivity
 
 class GroupAddActivity : AppCompatActivity() {
 
@@ -24,8 +24,7 @@ class GroupAddActivity : AppCompatActivity() {
             val replyIntent = Intent()
             if (TextUtils.isEmpty(editGroupView.text)) {
                 setResult(Activity.RESULT_CANCELED, replyIntent)
-            }
-            else {
+            } else {
                 val group = editGroupView.text.toString()
                 replyIntent.putExtra(EXTRA_REPLY, group)
                 setResult(Activity.RESULT_OK, replyIntent)

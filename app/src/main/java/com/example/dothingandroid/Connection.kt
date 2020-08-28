@@ -1,7 +1,6 @@
 package com.example.dothingandroid
 
 import java.io.BufferedReader
-import java.io.IOException
 import java.io.InputStreamReader
 import java.io.PrintWriter
 import java.net.Socket
@@ -54,8 +53,8 @@ class Connection(in_address: String, in_port: Int) {
         return out
     }
 
-    fun SendList(endcode: String, list: List<String>){
-        for (item in list){
+    fun SendList(endcode: String, list: List<String>) {
+        for (item in list) {
             send(item)
             WaitUntilRecv()
         }
