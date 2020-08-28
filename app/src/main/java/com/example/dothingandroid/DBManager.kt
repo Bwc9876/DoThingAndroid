@@ -3,6 +3,7 @@ package com.example.dothingandroid
 import android.util.Log
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 class DBManager {
 
@@ -10,22 +11,11 @@ class DBManager {
         ip: String,
         port: Int,
         username: String,
-        group: String,
         token: String,
         groupDAO: GroupAccess
     ) {
         GlobalScope.launch {
-            val con = Connection(ip, port)
-            con.send("G/$username/$group/$token/JAVA")
-            val returned: String? = con.recv()
-            if (returned == "IT") {
-                Log.e("ERROR", "Invalid Token")
-            } else if (returned == "IU") {
-                Log.e("ERROR", "Invalid User")
-            }
-            con.send("Ready")
-            val out: List<String?> = con.RecvList("GO", "END")
-            con.dc()
+            val out: List<String?> = NON_SAFE_GetGroups(ip, port, username, token)
 
             for (task in out) {
                 task?.let {
@@ -40,6 +30,32 @@ class DBManager {
 
         }
     }
+
+    fun NON_SAFE_GetGroups(
+        ip: String,
+        port: Int,
+        username: String,
+        token: String,
+    ): List<String?> {
+        val con = Connection(ip, port)
+        con.send("G/$username/NONE/$token/JAVA")
+        val returned: String? = con.recv()
+        if (returned == "IT") {
+            Log.e("ERROR", "Invalid Token")
+        } else if (returned == "IU") {
+            Log.e("ERROR", "Invalid User")
+        }
+        con.send("Ready")
+        val out: List<String?> = con.RecvList("GO", "END")
+        con.dc()
+        return out
+    }
+
+    fun rand(start: Int, end: Int): Int {
+        require(!(start > end || end - start + 1 > Int.MAX_VALUE)) { "Illegal Argument" }
+        return Random(System.nanoTime()).nextInt(end - start + 1) + start
+    }
+
 
     fun NON_SAFE_GetTasks(
         ip: String,
@@ -60,6 +76,37 @@ class DBManager {
         val out: MutableList<String> = con.RecvList("GO", "END")
         con.dc()
         return out
+    }
+
+    fun NON_SAFE_GenIdForTask(
+        ip: String,
+        port: Int,
+        username: String,
+        token: String,
+    ): Int {
+        val out: List<String?> = NON_SAFE_GetGroups(ip, port, username, token)
+        val taken: MutableList<Int> = ArrayList()
+        for (group in out) {
+            group?.let {
+                val items = NON_SAFE_GetTasks(ip, port, username, it, token)
+                items.removeFirst()
+                for (i in items) {
+                    taken.add(i.split(",")[0].toInt())
+                }
+            }
+        }
+
+        var newid: Int
+
+        while (true) {
+            newid = rand(0, 10000)
+            if (!taken.contains(newid)) {
+                break
+            }
+        }
+
+        return newid
+
     }
 
     fun AddGroup(
@@ -142,6 +189,7 @@ class DBManager {
         GlobalScope.launch {
             val g = viewDB.GetGroupDAO().GetRawGroupByName(group)
             var items = g.Items
+            newtask.id = NON_SAFE_GenIdForTask(ip, port, username, token)
             items = items + "/" + newtask.ConSelfToString()
             viewDB.GetGroupDAO().UpdateItems(group, items)
             NON_SAFE_PushGroup(ip, port, username, group, token, viewDB)
