@@ -62,6 +62,8 @@ class GroupListAdapter internal constructor(context: Context) : RecyclerView.Ada
             holder.groupItemView.text = current.Name + " (Empty)"
         }
         val taskAdapter = TaskListAdapter(holder.itemViewer.context)
+        taskAdapter.TaskListAdapter(mContext)
+        taskAdapter.updateGroup(current.Name)
         taskAdapter.setTasks(taskobjs)
         holder.recyclerView.adapter = taskAdapter
         holder.recyclerView.layoutManager = LinearLayoutManager(holder.itemViewer.context)

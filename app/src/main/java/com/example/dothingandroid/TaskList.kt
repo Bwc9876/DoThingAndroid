@@ -52,6 +52,10 @@ class TaskList : AppCompatActivity() {
 
     }
 
+    fun ToggleDone(group: String, task: String, done: Boolean){
+        DBManager().ToggleTask("192.168.86.29", 8080, "bwc9876", group, "-x\$phI5|HO\$^4Y7<b(oywv8Jyo2IiyempboFmRi.z(Ouz-BNrmg7R(]hnMr|.4?^.Kf@kOwPY8<&3g_|_S&X2)v^%WL>i[4)r)>Ap?O=CCkTsYR(YCkf4Of:.\$1|q=+.II33Wte?>_9.yE%|v)jB|elTRc{{^qWMF)uidHSK5<rwng8Pq]Wj{AtL0hg?2DwX@rOW&K42k2sw!ZV#G&FNo6R0hy#0ur<}xMgkm+k)L|VVmFKZ^cmgrE#rJ7u:Wv1Q", groupViewModel, task, done)
+    }
+
     fun StartTaskAdd(group: String){
         val intent = Intent(this@TaskList, TaskAddActivity::class.java)
         intent.putExtra(TaskAddActivity.EXTRA_REPLY, group)
@@ -65,7 +69,7 @@ class TaskList : AppCompatActivity() {
             data?.getStringExtra(GroupAddActivity.EXTRA_REPLY)?.let{
                 val group = Group(it, -1, "NONE")
                 groupViewModel.insert(group)
-                DBManager().PushGroup("192.168.86.29", 8080, "bwc9876", group.Name, "-x\$phI5|HO\$^4Y7<b(oywv8Jyo2IiyempboFmRi.z(Ouz-BNrmg7R(]hnMr|.4?^.Kf@kOwPY8<&3g_|_S&X2)v^%WL>i[4)r)>Ap?O=CCkTsYR(YCkf4Of:.\$1|q=+.II33Wte?>_9.yE%|v)jB|elTRc{{^qWMF)uidHSK5<rwng8Pq]Wj{AtL0hg?2DwX@rOW&K42k2sw!ZV#G&FNo6R0hy#0ur<}xMgkm+k)L|VVmFKZ^cmgrE#rJ7u:Wv1Q", groupViewModel)
+                DBManager().AddGroup("192.168.86.29", 8080, "bwc9876", group.Name, "-x\$phI5|HO\$^4Y7<b(oywv8Jyo2IiyempboFmRi.z(Ouz-BNrmg7R(]hnMr|.4?^.Kf@kOwPY8<&3g_|_S&X2)v^%WL>i[4)r)>Ap?O=CCkTsYR(YCkf4Of:.\$1|q=+.II33Wte?>_9.yE%|v)jB|elTRc{{^qWMF)uidHSK5<rwng8Pq]Wj{AtL0hg?2DwX@rOW&K42k2sw!ZV#G&FNo6R0hy#0ur<}xMgkm+k)L|VVmFKZ^cmgrE#rJ7u:Wv1Q", groupViewModel)
             }
         }
         else if(requestCode == TaskAddActivityRequestCode && resultCode == Activity.RESULT_OK){
