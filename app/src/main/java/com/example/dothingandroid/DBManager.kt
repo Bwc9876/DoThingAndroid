@@ -31,6 +31,14 @@ class DBManager {
         }
     }
 
+    fun Refresh(viewDB: GroupViewModel) {
+        GlobalScope.launch {
+            viewDB.GetGroupDAO().deleteAll()
+            PopulateDB("192.168.86.29", 8080, viewDB)
+        }
+
+    }
+
     fun PopulateDB(
         ip: String,
         port: Int,

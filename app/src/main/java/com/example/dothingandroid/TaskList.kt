@@ -115,12 +115,19 @@ class TaskList : AppCompatActivity() {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        return if (item.itemId == R.id.action_logout) {
-            DBManager().Logout(groupViewModel, this)
-            true
-        } else {
-            super.onOptionsItemSelected(item)
-            false
+        return when (item.itemId) {
+            R.id.action_logout -> {
+                DBManager().Logout(groupViewModel, this)
+                true
+            }
+            R.id.action_refresh -> {
+                DBManager().Refresh(groupViewModel)
+                true
+            }
+            else -> {
+                super.onOptionsItemSelected(item)
+                false
+            }
         }
     }
 
