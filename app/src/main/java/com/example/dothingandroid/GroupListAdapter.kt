@@ -53,10 +53,12 @@ class GroupListAdapter internal constructor(context: Context) :
         }
         val tasks = current.Items.split('/')
         val taskobjs: MutableList<Task> = ArrayList()
-        for (task in tasks) {
-            val tasksplit = task.split(',')
-            if (tasksplit[0] != "NONE") {
-                taskobjs.add(Task(tasksplit[0].toInt(), tasksplit[1], tasksplit[2].toBoolean()))
+        if (current.Items != "NONE") {
+            for (task in tasks) {
+                val tasksplit = task.split(',')
+                if (tasksplit[0] != "NONE") {
+                    taskobjs.add(Task(tasksplit[0].toInt(), tasksplit[1], tasksplit[2].toBoolean()))
+                }
             }
         }
         if (taskobjs.isEmpty()) {

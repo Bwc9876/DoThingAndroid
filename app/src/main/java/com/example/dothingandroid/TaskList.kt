@@ -4,6 +4,8 @@ package com.example.dothingandroid
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -22,7 +24,7 @@ class TaskList : AppCompatActivity() {
 
     private val GroupAddActivityRequestCode = 1
 
-    public val context: TaskList = this@TaskList
+    val context: TaskList = this@TaskList
 
     private val TaskAddActivityRequestCode = 2
 
@@ -53,9 +55,7 @@ class TaskList : AppCompatActivity() {
         DBManager().ToggleTask(
             "192.168.86.29",
             8080,
-            "bwc9876",
             group,
-            "-x\$phI5|HO\$^4Y7<b(oywv8Jyo2IiyempboFmRi.z(Ouz-BNrmg7R(]hnMr|.4?^.Kf@kOwPY8<&3g_|_S&X2)v^%WL>i[4)r)>Ap?O=CCkTsYR(YCkf4Of:.\$1|q=+.II33Wte?>_9.yE%|v)jB|elTRc{{^qWMF)uidHSK5<rwng8Pq]Wj{AtL0hg?2DwX@rOW&K42k2sw!ZV#G&FNo6R0hy#0ur<}xMgkm+k)L|VVmFKZ^cmgrE#rJ7u:Wv1Q",
             groupViewModel,
             task,
             done
@@ -78,9 +78,7 @@ class TaskList : AppCompatActivity() {
                 DBManager().AddGroup(
                     "192.168.86.29",
                     8080,
-                    "bwc9876",
                     group.Name,
-                    "-x\$phI5|HO\$^4Y7<b(oywv8Jyo2IiyempboFmRi.z(Ouz-BNrmg7R(]hnMr|.4?^.Kf@kOwPY8<&3g_|_S&X2)v^%WL>i[4)r)>Ap?O=CCkTsYR(YCkf4Of:.\$1|q=+.II33Wte?>_9.yE%|v)jB|elTRc{{^qWMF)uidHSK5<rwng8Pq]Wj{AtL0hg?2DwX@rOW&K42k2sw!ZV#G&FNo6R0hy#0ur<}xMgkm+k)L|VVmFKZ^cmgrE#rJ7u:Wv1Q",
                     groupViewModel
                 )
             }
@@ -91,9 +89,7 @@ class TaskList : AppCompatActivity() {
                 DBManager().AddTask(
                     "192.168.86.29",
                     8080,
-                    "bwc9876",
                     it.split("/")[1],
-                    "-x\$phI5|HO\$^4Y7<b(oywv8Jyo2IiyempboFmRi.z(Ouz-BNrmg7R(]hnMr|.4?^.Kf@kOwPY8<&3g_|_S&X2)v^%WL>i[4)r)>Ap?O=CCkTsYR(YCkf4Of:.\$1|q=+.II33Wte?>_9.yE%|v)jB|elTRc{{^qWMF)uidHSK5<rwng8Pq]Wj{AtL0hg?2DwX@rOW&K42k2sw!ZV#G&FNo6R0hy#0ur<}xMgkm+k)L|VVmFKZ^cmgrE#rJ7u:Wv1Q",
                     groupViewModel,
                     task
                 )
@@ -107,6 +103,25 @@ class TaskList : AppCompatActivity() {
         }
 
 
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        return if (item.itemId == R.id.action_logout) {
+            DBManager().Logout(groupViewModel, this)
+            true
+        } else {
+            super.onOptionsItemSelected(item)
+            false
+        }
     }
 
     companion object {

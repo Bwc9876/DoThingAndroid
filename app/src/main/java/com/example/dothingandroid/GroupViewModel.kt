@@ -13,6 +13,7 @@ class GroupViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: UserDataRepo
 
     val GroupAccess = UserData.getDatabase(application, viewModelScope).GroupAccess()
+    val UserAccess = UserData.getDatabase(application, viewModelScope).UserAccess()
 
     val allGroups: LiveData<List<Group>>
 
@@ -33,6 +34,10 @@ class GroupViewModel(application: Application) : AndroidViewModel(application) {
     fun GetHighestId(): Int {
         Log.d("DEBUG", GroupAccess.GetHighestPos().toString())
         return GroupAccess.GetHighestPos()
+    }
+
+    fun GetUserDAO(): UserAccess {
+        return UserAccess
     }
 
 }

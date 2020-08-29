@@ -1,5 +1,6 @@
 package com.example.dothingandroid
 
+import android.util.Log
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.PrintWriter
@@ -18,16 +19,23 @@ class Connection(in_address: String, in_port: Int) {
     private var writer: PrintWriter = PrintWriter(s.getOutputStream(), true)
     private var scanner: Scanner = Scanner(reader)
 
-    fun send(message: String) {
-        writer.println(message)
+    fun send(message: String, spacesafe: Boolean = false) {
+        if (spacesafe) {
+            writer.println(message.replace(" ", "_"))
+        } else {
+            writer.println(message)
+        }
     }
 
     fun recv(): String {
-        return if (scanner.hasNext()) {
-            scanner.next()
+        var output: String = ""
+        if (scanner.hasNext()) {
+            output = scanner.nextLine()
+            Log.d("DEBUG", output)
         } else {
-            ""
+            output = ""
         }
+        return output
     }
 
     fun WaitUntilRecv(): String {
@@ -55,7 +63,7 @@ class Connection(in_address: String, in_port: Int) {
 
     fun SendList(endcode: String, list: List<String>) {
         for (item in list) {
-            send(item)
+            send(item, spacesafe = true)
             WaitUntilRecv()
         }
         send(endcode)

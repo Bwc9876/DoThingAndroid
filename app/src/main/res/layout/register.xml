@@ -21,7 +21,7 @@
         app:layout_constraintVertical_bias="0.19999999" />
 
     <EditText
-        android:id="@+id/editTextTextPersonName"
+        android:id="@+id/Register_Username"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:ems="10"
@@ -29,7 +29,7 @@
         android:inputType="textPersonName"
         android:singleLine="true"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        app:layout_constraintBottom_toTopOf="@+id/login_button"
+        app:layout_constraintBottom_toTopOf="@+id/Register_Password"
         app:layout_constraintEnd_toEndOf="@+id/textview_first2"
         app:layout_constraintStart_toStartOf="@+id/textview_first2"
         app:layout_constraintTop_toBottomOf="@+id/textview_first2" />
@@ -48,7 +48,7 @@
         app:layout_constraintVertical_bias="0.63" />
 
     <EditText
-        android:id="@+id/editTextTextPassword"
+        android:id="@+id/Register_Password"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:ems="10"
@@ -56,10 +56,10 @@
         android:inputType="textPassword"
         android:singleLine="true"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        app:layout_constraintBottom_toTopOf="@+id/login_button"
+        app:layout_constraintBottom_toTopOf="@+id/register_button"
         app:layout_constraintEnd_toEndOf="@+id/textview_first2"
-        app:layout_constraintHorizontal_bias="0.54"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/textview_first2"
-        app:layout_constraintTop_toBottomOf="@+id/editTextTextPersonName" />
+        app:layout_constraintTop_toBottomOf="@+id/textview_first2" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

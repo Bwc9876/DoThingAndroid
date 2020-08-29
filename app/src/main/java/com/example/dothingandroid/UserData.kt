@@ -4,34 +4,15 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
-@Database(entities = arrayOf(Group::class), version = 1, exportSchema = false)
-public abstract class UserData : RoomDatabase() {
+@Database(entities = arrayOf(Group::class, User::class), version = 2, exportSchema = false)
+abstract class UserData : RoomDatabase() {
 
     abstract fun GroupAccess(): GroupAccess
-
-    private class UserDataCallback(private val scope: CoroutineScope) : RoomDatabase.Callback() {
-        override fun onOpen(db: SupportSQLiteDatabase) {
-            super.onOpen(db)
-            INSTANCE?.let { database ->
-                scope.launch { populateDatabase(database.GroupAccess()) }
-            }
-        }
-
-        suspend fun populateDatabase(groupAccess: GroupAccess) {
-            groupAccess.deleteAll()
-            DBManager().PopulateDB(
-                "192.168.86.29",
-                8080,
-                "bwc9876",
-                "-x\$phI5|HO\$^4Y7<b(oywv8Jyo2IiyempboFmRi.z(Ouz-BNrmg7R(]hnMr|.4?^.Kf@kOwPY8<&3g_|_S&X2)v^%WL>i[4)r)>Ap?O=CCkTsYR(YCkf4Of:.\$1|q=+.II33Wte?>_9.yE%|v)jB|elTRc{{^qWMF)uidHSK5<rwng8Pq]Wj{AtL0hg?2DwX@rOW&K42k2sw!ZV#G&FNo6R0hy#0ur<}xMgkm+k)L|VVmFKZ^cmgrE#rJ7u:Wv1Q",
-                groupAccess
-            )
-        }
-    }
+    abstract fun UserAccess(): UserAccess
 
     companion object {
         @Volatile
@@ -42,12 +23,17 @@ public abstract class UserData : RoomDatabase() {
             if (tempInstance != null) {
                 return tempInstance
             }
+            val MIGRATION_1_2 = object : Migration(1, 2) {
+                override fun migrate(database: SupportSQLiteDatabase) {
+                    database.execSQL("CREATE TABLE 'UserTable' ('Name' TEXT NOT NULL, 'Token' TEXT NOT NULL, PRIMARY KEY('Name'))")
+                }
+            }
             synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     UserData::class.java,
                     "UserData"
-                ).addCallback(UserDataCallback(scope)).build()
+                ).addMigrations(MIGRATION_1_2).build()
                 INSTANCE = instance
                 return instance
             }

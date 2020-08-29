@@ -20,4 +20,6 @@
     <string name="EmptyList">(Empty)</string>
     <string name="hint_task">Task Name</string>
     <string name="task_add">Add Task</string>
+    <string name="invalid_login">Invalid Username/Password</string>
+    <string name="action_logout">Logout</string>
 </resources>

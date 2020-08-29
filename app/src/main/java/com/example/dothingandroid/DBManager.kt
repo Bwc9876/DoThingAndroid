@@ -1,5 +1,7 @@
 package com.example.dothingandroid
 
+import android.app.Activity
+import android.content.Intent
 import android.util.Log
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -7,24 +9,46 @@ import kotlin.random.Random
 
 class DBManager {
 
+    fun Continue_if_Data(viewDB: GroupViewModel, mView: Activity) {
+        GlobalScope.launch {
+            val users = viewDB.GetUserDAO().GetCurrentUser()
+            if (users.size > 0) {
+                Log.d("DEBUG", "User detected")
+                viewDB.GetGroupDAO().deleteAll()
+                PopulateDB("192.168.86.29", 8080, viewDB)
+                val intent = Intent(mView, TaskList::class.java)
+                mView.startActivity(intent)
+            }
+            Log.d("DEBUG", "HA HA HA HA ONE")
+        }
+    }
+
+    fun Logout(viewDB: GroupViewModel, mAct: Activity) {
+        GlobalScope.launch {
+            viewDB.GetUserDAO().deleteAll()
+            val intent = Intent(mAct, MainActivity::class.java)
+            mAct.startActivity(intent)
+        }
+    }
+
     fun PopulateDB(
         ip: String,
         port: Int,
-        username: String,
-        token: String,
-        groupDAO: GroupAccess
+        viewDB: GroupViewModel
     ) {
         GlobalScope.launch {
+            val user = viewDB.GetUserDAO().GetCurrentUser()[0]
+            val username = user.Name
+            val token = user.Token
             val out: List<String?> = NON_SAFE_GetGroups(ip, port, username, token)
-
             for (task in out) {
                 task?.let {
                     Log.d("DEBUG", it)
                     val items = NON_SAFE_GetTasks(ip, port, username, it, token)
-                    Log.i("INFO", items.joinToString(separator = "/"))
+                    Log.i("Info", "Items: " + items.joinToString("/"))
                     val position = items.removeFirst().toInt()
                     val itemstring = items.joinToString(separator = "/")
-                    groupDAO.insert(Group(it, position, itemstring))
+                    viewDB.GetGroupDAO().insert(Group(it, position, itemstring))
                 }
             }
 
@@ -39,7 +63,7 @@ class DBManager {
     ): List<String?> {
         val con = Connection(ip, port)
         con.send("G/$username/NONE/$token/JAVA")
-        val returned: String? = con.recv()
+        val returned: String = con.recv()
         if (returned == "IT") {
             Log.e("ERROR", "Invalid Token")
         } else if (returned == "IU") {
@@ -47,6 +71,7 @@ class DBManager {
         }
         con.send("Ready")
         val out: List<String?> = con.RecvList("GO", "END")
+        Log.i("INFO", out.joinToString("/"))
         con.dc()
         return out
     }
@@ -91,7 +116,9 @@ class DBManager {
                 val items = NON_SAFE_GetTasks(ip, port, username, it, token)
                 items.removeFirst()
                 for (i in items) {
-                    taken.add(i.split(",")[0].toInt())
+                    if (i != "NONE") {
+                        taken.add(i.split(",")[0].toInt())
+                    }
                 }
             }
         }
@@ -112,13 +139,20 @@ class DBManager {
     fun AddGroup(
         ip: String,
         port: Int,
-        username: String,
         group: String,
-        token: String,
         viewDB: GroupViewModel
     ) {
         GlobalScope.launch {
-            val newpos = viewDB.GetHighestId() + 1
+            val user = NON_SAFE_Get_User_Data(viewDB)
+            val username = user.Name
+            val token = user.Token
+            val highest = viewDB.GetHighestId()
+            val newpos: Int
+            if (highest == -1) {
+                newpos = 0
+            } else {
+                newpos = highest + 1
+            }
             viewDB.GetGroupDAO().UpdatePos(group, newpos)
             NON_SAFE_PushGroup(ip, port, username, group, token, viewDB)
         }
@@ -180,19 +214,22 @@ class DBManager {
     fun AddTask(
         ip: String,
         port: Int,
-        username: String,
         group: String,
-        token: String,
         viewDB: GroupViewModel,
         newtask: Task
     ) {
         GlobalScope.launch {
+            val user = NON_SAFE_Get_User_Data(viewDB)
             val g = viewDB.GetGroupDAO().GetRawGroupByName(group)
             var items = g.Items
-            newtask.id = NON_SAFE_GenIdForTask(ip, port, username, token)
-            items = items + "/" + newtask.ConSelfToString()
+            newtask.id = NON_SAFE_GenIdForTask(ip, port, user.Name, user.Token)
+            if (items == "NONE") {
+                items = newtask.ConSelfToString()
+            } else {
+                items = items + "/" + newtask.ConSelfToString()
+            }
             viewDB.GetGroupDAO().UpdateItems(group, items)
-            NON_SAFE_PushGroup(ip, port, username, group, token, viewDB)
+            NON_SAFE_PushGroup(ip, port, user.Name, group, user.Token, viewDB)
         }
     }
 
@@ -230,14 +267,16 @@ class DBManager {
         val out: MutableList<Task> = ArrayList()
         val taskrawstringlist = taskstring.split("/")
         for (taskstringraw in taskrawstringlist) {
-            val taskvalues = taskstringraw.split(",")
-            out.add(
-                Task(
-                    RemoveNonDigits(taskvalues[0]).toInt(),
-                    taskvalues[1],
-                    taskvalues[2].toBoolean()
+            if (taskstringraw != "NONE") {
+                val taskvalues = taskstringraw.split(",")
+                out.add(
+                    Task(
+                        RemoveNonDigits(taskvalues[0]).toInt(),
+                        taskvalues[1],
+                        taskvalues[2].toBoolean()
+                    )
                 )
-            )
+            }
         }
         return out
     }
@@ -288,14 +327,15 @@ class DBManager {
     fun ToggleTask(
         ip: String,
         port: Int,
-        username: String,
         group: String,
-        token: String,
         viewDB: GroupViewModel,
         taskname: String,
         done: Boolean
     ) {
         GlobalScope.launch {
+            val user = NON_SAFE_Get_User_Data(viewDB)
+            val username = user.Name
+            val token = user.Token
             val groupchange = viewDB.GetGroupDAO().GetRawGroupByName(group)
             val items_string = groupchange.Items
             val items = ConstructTaskList(items_string)
@@ -304,5 +344,64 @@ class DBManager {
             NON_SAFE_PushGroup(ip, port, username, group, token, viewDB)
         }
     }
+
+
+    fun NON_SAFE_Get_User_Data(viewDB: GroupViewModel): User {
+        val out: MutableList<String> = ArrayList()
+        val user = viewDB.GetUserDAO().GetCurrentUser()[0]
+        return user
+    }
+
+    fun Login(username: String, password: String, viewDB: GroupViewModel, act: Activity) {
+        GlobalScope.launch {
+            val con = Connection("192.168.86.39", 8080)
+            con.send("L/$username/$password/JAVA")
+            val returned = con.WaitUntilRecv()
+            con.dc()
+            //TODO: Show error messages to user
+            if (returned == "IL") {
+                Log.e("AUTH", "Invalid Login")
+            } else if (returned == "IE") {
+                Log.e("AUTH", "Internal Server Error")
+            } else {
+                val userdata = returned.split("/")
+                val UserDAO = viewDB.GetUserDAO()
+                UserDAO.deleteAll()
+                UserDAO.insert(User(userdata[0], userdata[1]))
+                Continue_if_Data(viewDB, act)
+            }
+        }
+    }
+
+    fun NON_SAFE_Add_User(name: String, token: String) {
+        val con = Connection("192.168.86.29", 8080)
+        con.send("U/$name/NONE/$token/JAVA")
+        con.WaitUntilRecv()
+        con.send("Ready")
+        con.dc()
+    }
+
+    fun Register(username: String, password: String, viewDB: GroupViewModel, act: Activity) {
+        GlobalScope.launch {
+            val con = Connection("192.168.86.39", 8080)
+            con.send("R/$username/$password/JAVA")
+            val returned = con.WaitUntilRecv()
+            con.dc()
+            //TODO: Show error messages to user
+            if (returned == "UE") {
+                Log.e("AUTH", "User Exists")
+            } else if (returned == "IE") {
+                Log.e("AUTH", "Internal Server Error")
+            } else {
+                val userdata = returned.split("/")
+                NON_SAFE_Add_User(userdata[0], userdata[1])
+                val UserDAO = viewDB.GetUserDAO()
+                UserDAO.deleteAll()
+                UserDAO.insert(User(userdata[0], userdata[1]))
+                Continue_if_Data(viewDB, act)
+            }
+        }
+    }
+
 
 }
