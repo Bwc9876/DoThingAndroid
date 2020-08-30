@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#6200EE</color>
-    <color name="colorPrimaryDark">#3700B3</color>
-    <color name="colorAccent">#03DAC5</color>
+    <color name="colorPrimary">#868686</color>
+    <color name="colorPrimaryDark">#323232</color>
+    <color name="colorAccent">#77A5B9</color>
     <color name="buttonLabel">#FFFFFF</color>
+    <color name="group_header_bg">#c7c7c5</color>
+    <color name="group_header_border">#7a7a7a</color>
+    <color name="group_header_text">#3a70c7</color>
+    <color name="loadingbg">#67828282</color>
 </resources>

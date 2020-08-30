@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Do Thing Android</string>
+    <string name="app_name">Do Thing</string>
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
@@ -19,8 +19,12 @@
     <string name="empty_not_saved">Empty Name Field</string>
     <string name="EmptyList">(Empty)</string>
     <string name="hint_task">Task Name</string>
-    <string name="task_add">Add Task</string>
+    <string name="task_add">+</string>
     <string name="invalid_login">Invalid Username/Password</string>
     <string name="action_logout">Logout</string>
     <string name="action_refresh">Refresh</string>
+    <string name="public_ip_label">Main Server Address</string>
+    <string name="public_auth_ip_label">Auth Server Address</string>
+    <string name="hint_ip">IP Address</string>
+    <string name="hint_port">Port</string>
 </resources>

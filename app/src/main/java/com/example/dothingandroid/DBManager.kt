@@ -42,7 +42,7 @@ class DBManager {
     fun PopulateDB(
         ip: String,
         port: Int,
-        viewDB: GroupViewModel
+        viewDB: GroupViewModel,
     ) {
         GlobalScope.launch {
             val user = viewDB.GetUserDAO().GetCurrentUser()[0]
@@ -59,7 +59,6 @@ class DBManager {
                     viewDB.GetGroupDAO().insert(Group(it, position, itemstring))
                 }
             }
-
         }
     }
 
@@ -166,33 +165,6 @@ class DBManager {
         }
     }
 
-    fun PushGroup(
-        ip: String,
-        port: Int,
-        username: String,
-        group: String,
-        token: String,
-        viewDB: GroupViewModel
-    ) {
-        GlobalScope.launch {
-            val con = Connection(ip, port)
-            con.send("W/$username/$group/$token/JAVA")
-            val returned: String? = con.recv()
-            if (returned == "IT") {
-                Log.e("ERROR", "Invalid Token")
-            } else if (returned == "IU") {
-                Log.e("ERROR", "Invalid User")
-            }
-            con.send("Ready")
-            val tasksraw = viewDB.GetGroupDAO().GetRawGroupByName(group).Items
-            val pos = viewDB.GetGroupDAO().GetRawGroupByName(group).Position
-            viewDB.GetGroupDAO().UpdatePos(group, pos)
-            val tasks = (pos.toString() + "/" + tasksraw).split("/")
-            con.SendList("END", tasks)
-            con.dc()
-        }
-    }
-
     fun NON_SAFE_PushGroup(
         ip: String,
         port: Int,
@@ -262,15 +234,6 @@ class DBManager {
         return outstr
     }
 
-    fun ConstructTask(taskstring: String): Task {
-        val taskvalues = taskstring.split(",")
-        return Task(
-            RemoveNonDigits(taskvalues[0]).toInt(),
-            taskvalues[1],
-            taskvalues[2].toBoolean()
-        )
-    }
-
     fun ConstructTaskList(taskstring: String): MutableList<Task> {
         val out: MutableList<Task> = ArrayList()
         val taskrawstringlist = taskstring.split("/")
@@ -309,29 +272,6 @@ class DBManager {
         return out1
     }
 
-    fun NON_SAFE_GetTaskByID(
-        group: String,
-        viewDB: GroupViewModel,
-        taskname: String
-    ): MutableList<String> {
-        val outlist: MutableList<String> = ArrayList()
-        var out: Task = Task(-1, "ERROR", false)
-        var pos: Int = -1
-        val DAO = viewDB.GetGroupDAO()
-        val groupobj = DAO.GetRawGroupByName(group)
-        val tasks = ConstructTaskList(groupobj.Items)
-        for (task in tasks) {
-            if (task.id.toString() == taskname) {
-                out = task
-                pos = tasks.indexOf(task)
-            }
-        }
-        outlist.add(out.ConSelfToString())
-        outlist.add(pos.toString())
-        return outlist
-
-    }
-
     fun ToggleTask(
         ip: String,
         port: Int,
@@ -356,8 +296,7 @@ class DBManager {
 
     fun NON_SAFE_Get_User_Data(viewDB: GroupViewModel): User {
         val out: MutableList<String> = ArrayList()
-        val user = viewDB.GetUserDAO().GetCurrentUser()[0]
-        return user
+        return viewDB.GetUserDAO().GetCurrentUser()[0]
     }
 
     fun Login(username: String, password: String, viewDB: GroupViewModel, act: Activity) {

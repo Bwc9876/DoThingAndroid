@@ -20,6 +20,7 @@ class TaskListAdapter internal constructor(context: Context) :
 
     inner class TaskViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val groupItemView: SwitchMaterial = itemView.findViewById(R.id.task_text)
+        val taskBorderBottom: View = itemView.findViewById(R.id.task_seperator_bottom)
     }
 
     fun TaskListAdapter(context: Context?) {
@@ -35,7 +36,9 @@ class TaskListAdapter internal constructor(context: Context) :
         val current = tasks[position]
         holder.groupItemView.text = current.name
         holder.groupItemView.isChecked = current.done
-
+        if (position == tasks.size - 1) {
+            holder.taskBorderBottom.visibility = View.VISIBLE
+        }
         holder.groupItemView.setOnClickListener {
             if (mContext is TaskList) {
                 (mContext as TaskList).ToggleDone(

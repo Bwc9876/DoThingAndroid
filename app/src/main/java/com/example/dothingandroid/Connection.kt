@@ -10,8 +10,8 @@ import java.util.*
 
 class Connection(in_address: String, in_port: Int) {
 
-    val address = in_address
-    val port = in_port
+    private val address = in_address
+    private val port = in_port
 
 
     private var s: Socket = Socket(address, port)
@@ -28,7 +28,7 @@ class Connection(in_address: String, in_port: Int) {
     }
 
     fun recv(): String {
-        var output: String = ""
+        var output = ""
         if (scanner.hasNext()) {
             output = scanner.nextLine()
             Log.d("DEBUG", output)

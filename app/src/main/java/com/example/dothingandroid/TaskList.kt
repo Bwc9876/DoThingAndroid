@@ -84,7 +84,6 @@ class TaskList : AppCompatActivity() {
             }
         } else if (requestCode == TaskAddActivityRequestCode && resultCode == Activity.RESULT_OK) {
             data?.getStringExtra(TaskAddActivity.EXTRA_REPLY)?.let {
-                //TODO: Add ID Generating System
                 val task = Task(-1, it.split("/")[0], false)
                 DBManager().AddTask(
                     "192.168.86.29",
@@ -122,6 +121,11 @@ class TaskList : AppCompatActivity() {
             }
             R.id.action_refresh -> {
                 DBManager().Refresh(groupViewModel)
+                true
+            }
+            R.id.action_settings -> {
+                val intent = Intent(this, SettingsActivity::class.java)
+                startActivity(intent)
                 true
             }
             else -> {
