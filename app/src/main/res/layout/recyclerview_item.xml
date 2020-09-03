@@ -9,6 +9,25 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
+    <Button
+        android:id="@+id/edit_group_button"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_width="35dp"
+        android:layout_height="0dp"
+        android:background="@color/group_header_border"
+        android:gravity="center_horizontal"
+        android:textColor="@color/buttonLabel"
+        android:textSize="24sp"
+        android:text="@string/edit_symbol"
+        android:textStyle="bold"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="@id/textView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.9"
+        app:layout_constraintStart_toStartOf="@+id/textView"
+        app:layout_constraintTop_toTopOf="@+id/textView"
+        app:layout_constraintVertical_bias="0.0" />
+
     <View
         android:id="@+id/group_seperator_top"
         android:layout_width="match_parent"
@@ -27,8 +46,9 @@
         android:layout_width="380dp"
         android:layout_height="40dp"
         android:background="@drawable/group_header_rounded"
+        android:gravity="center_vertical"
         android:text="@string/hint_group"
-        android:textColor="@color/group_header_text"
+        android:textColor="#3C94BB"
         android:textSize="25sp"
         app:layout_constraintBottom_toTopOf="@id/expandable_layout"
         app:layout_constraintEnd_toEndOf="parent"
@@ -38,17 +58,20 @@
     <Button
         android:id="@+id/button_task_add"
         style="@style/Widget.AppCompat.Button.Colored"
-        android:layout_width="47dp"
-        android:layout_height="36dp"
+        android:layout_width="35dp"
+        android:layout_height="0dp"
         android:background="@color/group_header_border"
         android:text="@string/task_add"
+        android:textColor="@color/buttonLabel"
         android:textSize="24sp"
         android:textStyle="bold"
         android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="@id/textView"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.88"
+        app:layout_constraintHorizontal_bias="0.777"
         app:layout_constraintStart_toStartOf="@+id/textView"
-        app:layout_constraintTop_toTopOf="@+id/textView" />
+        app:layout_constraintTop_toTopOf="@+id/textView"
+        app:layout_constraintVertical_bias="0.0" />
 
     <net.cachapa.expandablelayout.ExpandableLayout
         android:id="@+id/expandable_layout"

@@ -29,6 +29,7 @@ class GroupListAdapter internal constructor(context: Context) :
         val itemViewer: View = itemView
         val recyclerView: RecyclerView = itemView.findViewById(R.id.recyclerviewtasks)
         val groupBorderTop: View = itemView.findViewById(R.id.group_seperator_top)
+        val editgroup: View = itemView.findViewById(R.id.edit_group_button)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GroupViewHolder {
@@ -47,6 +48,13 @@ class GroupListAdapter internal constructor(context: Context) :
         if (current.Position == groups.first().Position) {
             holder.groupBorderTop.visibility = View.VISIBLE
         }
+
+        holder.editgroup.setOnClickListener {
+            if (mContext is TaskList) {
+                (mContext as TaskList).StartGroupEdit(current.Name)
+            }
+        }
+
 
         holder.groupAddTaskButton.setOnClickListener {
             Log.d("DEBUG", mContext.toString())

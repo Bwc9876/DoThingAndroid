@@ -6,8 +6,26 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
+    <Button
+        android:id="@+id/edit_task_button"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_width="35dp"
+        android:layout_height="0dp"
+        android:background="@color/group_header_border"
+        android:text="@string/edit_symbol"
+        android:textColor="@color/buttonLabel"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@id/task_seperator_bottom"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.811"
+        app:layout_constraintStart_toStartOf="@+id/task_text"
+        app:layout_constraintTop_toBottomOf="@+id/task_border_top"
+        app:layout_constraintVertical_bias="0.0" />
+
     <View
-        android:id="@+id/view"
+        android:id="@+id/task_border_top"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginBottom="7dp"

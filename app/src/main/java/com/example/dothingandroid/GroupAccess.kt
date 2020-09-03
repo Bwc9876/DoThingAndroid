@@ -35,4 +35,7 @@ interface GroupAccess {
     @Query("UPDATE GroupTable SET Items = :newitems WHERE Name = :groupname")
     fun UpdateItems(groupname: String, newitems: String)
 
+    @Query("UPDATE GroupTable SET Name = :newname WHERE Name = :oldname")
+    fun UpdateName(newname: String, oldname: String)
+
 }

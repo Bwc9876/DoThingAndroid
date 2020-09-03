@@ -21,6 +21,7 @@ class TaskListAdapter internal constructor(context: Context) :
     inner class TaskViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val groupItemView: SwitchMaterial = itemView.findViewById(R.id.task_text)
         val taskBorderBottom: View = itemView.findViewById(R.id.task_seperator_bottom)
+        val taskEditButton: View = itemView.findViewById(R.id.edit_task_button)
     }
 
     fun TaskListAdapter(context: Context?) {
@@ -46,6 +47,11 @@ class TaskListAdapter internal constructor(context: Context) :
                     current.id.toString(),
                     holder.groupItemView.isChecked
                 )
+            }
+        }
+        holder.taskEditButton.setOnClickListener {
+            if (mContext is TaskList) {
+                (mContext as TaskList).StartTaskEdit(groupName, current.id.toString())
             }
         }
 

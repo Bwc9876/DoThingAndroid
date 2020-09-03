@@ -28,7 +28,7 @@ class Connection(in_address: String, in_port: Int) {
     }
 
     fun recv(): String {
-        var output = ""
+        var output: String = ""
         if (scanner.hasNext()) {
             output = scanner.nextLine()
             Log.d("DEBUG", output)

@@ -4,10 +4,72 @@ import android.app.Activity
 import android.content.Intent
 import android.util.Log
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.net.ConnectException
 import kotlin.random.Random
 
-class DBManager {
+class DBManager(loc: Boolean) {
+
+
+    var local: Boolean = true
+    private val default_ip: String = "71.225.44.187"
+    private val default_local_ip: String = "192.168.86.29"
+    private val default_auth_ip: String = "192.168.86.39"
+
+    init {
+        local = loc
+    }
+
+    fun GetIP(needed: String): String {
+        if (local) {
+            if (needed == "MAIN") {
+                return default_local_ip
+            } else {
+                return default_auth_ip
+            }
+        } else {
+            return default_ip
+        }
+    }
+
+
+    fun DeleteGroup(viewDB: GroupViewModel, name: String) {
+        GlobalScope.launch {
+            viewDB.GetGroupDAO().RemoveGroup(name)
+            val user = viewDB.GetUserDAO().GetCurrentUser()[0]
+            val con = Connection(GetIP("MAIN"), 8080)
+            con.send("D/${user.Name}/$name/${user.Token}/JAVA")
+            val returned: String? = con.recv()
+            if (returned == "IT") {
+                Log.e("ERROR", "Invalid Token")
+            } else if (returned == "IU") {
+                Log.e("ERROR", "Invalid User")
+            }
+            con.send("Ready")
+            con.dc()
+        }
+    }
+
+
+    fun RenameGroup(viewDB: GroupViewModel, newname: String, oldname: String) {
+        GlobalScope.launch {
+            val user = viewDB.GetUserDAO().GetCurrentUser()[0]
+            viewDB.GetGroupDAO().UpdateName(newname, oldname)
+            val con = Connection(GetIP("MAIN"), 8080)
+            con.send("N/${user.Name}/$oldname/${user.Token}/JAVA")
+            val returned: String? = con.recv()
+            if (returned == "IT") {
+                Log.e("ERROR", "Invalid Token")
+            } else if (returned == "IU") {
+                Log.e("ERROR", "Invalid User")
+            }
+            con.send("Ready")
+            con.WaitUntilRecv()
+            con.send(newname)
+            con.dc()
+        }
+    }
 
     fun Continue_if_Data(viewDB: GroupViewModel, mView: Activity) {
         GlobalScope.launch {
@@ -15,7 +77,7 @@ class DBManager {
             if (users.size > 0) {
                 Log.d("DEBUG", "User detected")
                 viewDB.GetGroupDAO().deleteAll()
-                PopulateDB("192.168.86.29", 8080, viewDB)
+                PopulateDB(viewDB)
                 val intent = Intent(mView, TaskList::class.java)
                 mView.startActivity(intent)
             }
@@ -34,25 +96,30 @@ class DBManager {
     fun Refresh(viewDB: GroupViewModel) {
         GlobalScope.launch {
             viewDB.GetGroupDAO().deleteAll()
-            PopulateDB("192.168.86.29", 8080, viewDB)
+            PopulateDB(viewDB)
         }
 
     }
 
     fun PopulateDB(
-        ip: String,
-        port: Int,
         viewDB: GroupViewModel,
     ) {
         GlobalScope.launch {
             val user = viewDB.GetUserDAO().GetCurrentUser()[0]
             val username = user.Name
             val token = user.Token
-            val out: List<String?> = NON_SAFE_GetGroups(ip, port, username, token)
+            val out: List<String?> = NON_SAFE_GetGroups(username, token)
             for (task in out) {
                 task?.let {
                     Log.d("DEBUG", it)
-                    val items = NON_SAFE_GetTasks(ip, port, username, it, token)
+                    var items: MutableList<String> = ArrayList()
+                    try {
+                        items = NON_SAFE_GetTasks(username, it, token)
+                    } catch (conerror: ConnectException) {
+                        //TODO: SHOW THIS TO USER
+                        Log.e("NETWORK", "Connection refused")
+                        this.cancel("Network Error")
+                    }
                     Log.i("Info", "Items: " + items.joinToString("/"))
                     val position = items.removeFirst().toInt()
                     val itemstring = items.joinToString(separator = "/")
@@ -63,12 +130,10 @@ class DBManager {
     }
 
     fun NON_SAFE_GetGroups(
-        ip: String,
-        port: Int,
         username: String,
         token: String,
     ): List<String?> {
-        val con = Connection(ip, port)
+        val con = Connection(GetIP("MAIN"), 8080)
         con.send("G/$username/NONE/$token/JAVA")
         val returned: String = con.recv()
         if (returned == "IT") {
@@ -90,13 +155,11 @@ class DBManager {
 
 
     fun NON_SAFE_GetTasks(
-        ip: String,
-        port: Int,
         username: String,
         group: String,
         token: String
     ): MutableList<String> {
-        val con = Connection(ip, port)
+        val con = Connection(GetIP("MAIN"), 8080)
         con.send("R/$username/$group/$token/JAVA")
         val returned: String? = con.recv()
         if (returned == "IT") {
@@ -111,16 +174,14 @@ class DBManager {
     }
 
     fun NON_SAFE_GenIdForTask(
-        ip: String,
-        port: Int,
         username: String,
         token: String,
     ): Int {
-        val out: List<String?> = NON_SAFE_GetGroups(ip, port, username, token)
+        val out: List<String?> = NON_SAFE_GetGroups(username, token)
         val taken: MutableList<Int> = ArrayList()
         for (group in out) {
             group?.let {
-                val items = NON_SAFE_GetTasks(ip, port, username, it, token)
+                val items = NON_SAFE_GetTasks(username, it, token)
                 items.removeFirst()
                 for (i in items) {
                     if (i != "NONE") {
@@ -144,8 +205,6 @@ class DBManager {
     }
 
     fun AddGroup(
-        ip: String,
-        port: Int,
         group: String,
         viewDB: GroupViewModel
     ) {
@@ -161,19 +220,17 @@ class DBManager {
                 newpos = highest + 1
             }
             viewDB.GetGroupDAO().UpdatePos(group, newpos)
-            NON_SAFE_PushGroup(ip, port, username, group, token, viewDB)
+            NON_SAFE_PushGroup(username, group, token, viewDB)
         }
     }
 
     fun NON_SAFE_PushGroup(
-        ip: String,
-        port: Int,
         username: String,
         group: String,
         token: String,
         viewDB: GroupViewModel
     ) {
-        val con = Connection(ip, port)
+        val con = Connection(GetIP("MAIN"), 8080)
         con.send("W/$username/$group/$token/JAVA")
         val returned: String? = con.recv()
         if (returned == "IT") {
@@ -192,8 +249,6 @@ class DBManager {
     }
 
     fun AddTask(
-        ip: String,
-        port: Int,
         group: String,
         viewDB: GroupViewModel,
         newtask: Task
@@ -202,14 +257,14 @@ class DBManager {
             val user = NON_SAFE_Get_User_Data(viewDB)
             val g = viewDB.GetGroupDAO().GetRawGroupByName(group)
             var items = g.Items
-            newtask.id = NON_SAFE_GenIdForTask(ip, port, user.Name, user.Token)
+            newtask.id = NON_SAFE_GenIdForTask(user.Name, user.Token)
             if (items == "NONE") {
                 items = newtask.ConSelfToString()
             } else {
                 items = items + "/" + newtask.ConSelfToString()
             }
             viewDB.GetGroupDAO().UpdateItems(group, items)
-            NON_SAFE_PushGroup(ip, port, user.Name, group, user.Token, viewDB)
+            NON_SAFE_PushGroup(user.Name, group, user.Token, viewDB)
         }
     }
 
@@ -272,9 +327,47 @@ class DBManager {
         return out1
     }
 
+
+    fun DeleteTask(
+        group: String,
+        viewDB: GroupViewModel,
+        taskname: String,
+    ) {
+        GlobalScope.launch {
+            val user = NON_SAFE_Get_User_Data(viewDB)
+            val username = user.Name
+            val token = user.Token
+            val groupchange = viewDB.GetGroupDAO().GetRawGroupByName(group)
+            val items_string = groupchange.Items
+            val items = ConstructTaskList(items_string)
+            items.removeAt(items.indexOf(FindItemFromListById(taskname.toInt(), items)))
+            viewDB.GetGroupDAO().UpdateItems(group, DeconstructTaskList(items))
+            NON_SAFE_PushGroup(username, group, token, viewDB)
+        }
+    }
+
+
+    fun EditTaskName(
+        group: String,
+        viewDB: GroupViewModel,
+        taskname: String,
+        newname: String
+    ) {
+        GlobalScope.launch {
+            val user = NON_SAFE_Get_User_Data(viewDB)
+            val username = user.Name
+            val token = user.Token
+            val groupchange = viewDB.GetGroupDAO().GetRawGroupByName(group)
+            val items_string = groupchange.Items
+            val items = ConstructTaskList(items_string)
+            items[items.indexOf(FindItemFromListById(taskname.toInt(), items))].name = newname
+            viewDB.GetGroupDAO().UpdateItems(group, DeconstructTaskList(items))
+            NON_SAFE_PushGroup(username, group, token, viewDB)
+        }
+    }
+
+
     fun ToggleTask(
-        ip: String,
-        port: Int,
         group: String,
         viewDB: GroupViewModel,
         taskname: String,
@@ -289,19 +382,18 @@ class DBManager {
             val items = ConstructTaskList(items_string)
             items[items.indexOf(FindItemFromListById(taskname.toInt(), items))].done = done
             viewDB.GetGroupDAO().UpdateItems(group, DeconstructTaskList(items))
-            NON_SAFE_PushGroup(ip, port, username, group, token, viewDB)
+            NON_SAFE_PushGroup(username, group, token, viewDB)
         }
     }
 
 
     fun NON_SAFE_Get_User_Data(viewDB: GroupViewModel): User {
-        val out: MutableList<String> = ArrayList()
         return viewDB.GetUserDAO().GetCurrentUser()[0]
     }
 
     fun Login(username: String, password: String, viewDB: GroupViewModel, act: Activity) {
         GlobalScope.launch {
-            val con = Connection("192.168.86.39", 8080)
+            val con = Connection(GetIP("AUTH"), 8081)
             con.send("L/$username/$password/JAVA")
             val returned = con.WaitUntilRecv()
             con.dc()
@@ -321,7 +413,7 @@ class DBManager {
     }
 
     fun NON_SAFE_Add_User(name: String, token: String) {
-        val con = Connection("192.168.86.29", 8080)
+        val con = Connection(GetIP("MAIN"), 8080)
         con.send("U/$name/NONE/$token/JAVA")
         con.WaitUntilRecv()
         con.send("Ready")
@@ -330,7 +422,7 @@ class DBManager {
 
     fun Register(username: String, password: String, viewDB: GroupViewModel, act: Activity) {
         GlobalScope.launch {
-            val con = Connection("192.168.86.39", 8080)
+            val con = Connection(GetIP("AUTH"), 8081)
             con.send("R/$username/$password/JAVA")
             val returned = con.WaitUntilRecv()
             con.dc()

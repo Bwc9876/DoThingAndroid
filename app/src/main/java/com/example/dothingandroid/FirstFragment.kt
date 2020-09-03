@@ -1,5 +1,6 @@
 package com.example.dothingandroid
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -29,6 +30,10 @@ class FirstFragment : Fragment() {
         Log.d("DEBUG", view.findViewById<Button>(R.id.button_register).text.toString())
         view.findViewById<Button>(R.id.button_register).setOnClickListener {
             findNavController().navigate(R.id.action_Splash_to_Register)
+        }
+        view.findViewById<Button>(R.id.button_settings).setOnClickListener {
+            val intent = Intent(this.context, SettingsActivity::class.java)
+            startActivity(intent)
         }
     }
 }

@@ -9,6 +9,7 @@ import android.widget.Button
 import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.preference.PreferenceManager
 
 class Register : Fragment() {
 
@@ -31,7 +32,10 @@ class Register : Fragment() {
             val usernamefield = view.findViewById<EditText>(R.id.Register_Username)
             val passwordfield = view.findViewById<EditText>(R.id.Register_Password)
             Log.d("DEBUG", "REGISTER PRESSED")
-            DBManager().Register(
+            DBManager(
+                PreferenceManager.getDefaultSharedPreferences(view.context)
+                    .getBoolean("local", true)
+            ).Register(
                 usernamefield.text.toString(),
                 passwordfield.text.toString(),
                 groupViewModel,
