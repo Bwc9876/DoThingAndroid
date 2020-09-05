@@ -11,6 +11,9 @@ interface GroupAccess {
     @Query("SELECT * from GroupTable ORDER BY Position ASC")
     fun GetSortedGroups(): LiveData<List<Group>>
 
+    @Query("SELECT * from GroupTable ORDER BY Position ASC")
+    fun GetRawSortedGroups(): List<Group>
+
     @Query("SELECT * from GroupTable WHERE Name = :groupname")
     fun GetGroupByName(groupname: String): LiveData<Group>
 

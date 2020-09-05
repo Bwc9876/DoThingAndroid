@@ -1,12 +1,16 @@
 package com.example.dothingandroid
 
+import android.content.ClipData
+import android.content.ClipDescription
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import net.cachapa.expandablelayout.ExpandableLayout
@@ -29,6 +33,7 @@ class GroupListAdapter internal constructor(context: Context) :
         val itemViewer: View = itemView
         val recyclerView: RecyclerView = itemView.findViewById(R.id.recyclerviewtasks)
         val groupBorderTop: View = itemView.findViewById(R.id.group_seperator_top)
+        val groupBorderBottom: View = itemView.findViewById(R.id.group_seperator_bottom)
         val editgroup: View = itemView.findViewById(R.id.edit_group_button)
     }
 
@@ -41,12 +46,21 @@ class GroupListAdapter internal constructor(context: Context) :
         this.mContext = context
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     override fun onBindViewHolder(holder: GroupViewHolder, position: Int) {
         val current = groups[position]
         holder.groupItemView.text = current.Name
-
-        if (current.Position == groups.first().Position) {
+        Log.i("INFO", current.Position.toString())
+        if (current.Position == 0) {
             holder.groupBorderTop.visibility = View.VISIBLE
+            holder.groupBorderTop.setOnDragListener(
+                DragActions().GroupBorder(
+                    0,
+                    mContext as TaskList
+                )
+            )
+        } else {
+            holder.groupBorderTop.visibility = View.GONE
         }
 
         holder.editgroup.setOnClickListener {
@@ -65,6 +79,19 @@ class GroupListAdapter internal constructor(context: Context) :
         holder.groupItemView.setOnClickListener {
             holder.groupExpandView.toggle()
         }
+
+        val clipDataString = "GROUP/${current.Name}"
+
+        holder.groupItemView.setOnLongClickListener { v: View ->
+            val item = ClipData.Item(clipDataString as CharSequence)
+            val mimeTypes = arrayOf(ClipDescription.MIMETYPE_TEXT_PLAIN)
+            val data = ClipData("GROUP", mimeTypes, item)
+            val dragshadow = ShadowMaker(v)
+            v.startDragAndDrop(
+                data, dragshadow, v, 0
+            )
+        }
+
         val tasks = current.Items.split('/')
         val taskobjs: MutableList<Task> = ArrayList()
         if (current.Items != "NONE") {
@@ -78,6 +105,28 @@ class GroupListAdapter internal constructor(context: Context) :
         if (taskobjs.isEmpty()) {
             holder.groupItemView.text = current.Name + " (Empty)"
         }
+        holder.groupItemView.setOnDragListener(
+            DragActions().Group(
+                current.Name,
+                mContext as TaskList
+            )
+        )
+        if (position == groups.size - 1) {
+            holder.groupBorderBottom.setOnDragListener(
+                DragActions().GroupBorder(
+                    position,
+                    mContext as TaskList
+                )
+            )
+        } else {
+            holder.groupBorderBottom.setOnDragListener(
+                DragActions().GroupBorder(
+                    position + 1,
+                    mContext as TaskList
+                )
+            )
+        }
+
         val taskAdapter = TaskListAdapter(holder.itemViewer.context)
         taskAdapter.TaskListAdapter(mContext)
         taskAdapter.updateGroup(current.Name)

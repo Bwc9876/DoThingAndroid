@@ -7,7 +7,9 @@
     android:id="@+id/GroupParent"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:layout_gravity="center_horizontal"
+    android:orientation="vertical"
+    app:barrierMargin="5dp">
 
     <Button
         android:id="@+id/edit_group_button"
@@ -16,9 +18,9 @@
         android:layout_height="0dp"
         android:background="@color/group_header_border"
         android:gravity="center_horizontal"
+        android:text="@string/edit_symbol"
         android:textColor="@color/buttonLabel"
         android:textSize="24sp"
-        android:text="@string/edit_symbol"
         android:textStyle="bold"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@id/textView"

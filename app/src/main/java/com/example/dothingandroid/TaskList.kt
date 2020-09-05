@@ -54,6 +54,24 @@ class TaskList : AppCompatActivity() {
 
     }
 
+    fun MoveGroup(group: String, newindex: Int) {
+        DBManager(
+            PreferenceManager.getDefaultSharedPreferences(this).getBoolean("local", true)
+        ).MoveGroup(groupViewModel, newindex, group)
+    }
+
+    fun ChangeTaskOrder(task: String, newindex: Int, group: String, newgroup: String) {
+        DBManager(
+            PreferenceManager.getDefaultSharedPreferences(this).getBoolean("local", true)
+        ).ChangeTaskOrder(groupViewModel, group, task, newindex, newgroup)
+    }
+
+    fun MoveTask(group: String, newgroup: String, task: String) {
+        DBManager(
+            PreferenceManager.getDefaultSharedPreferences(this).getBoolean("local", true)
+        ).MoveTask(groupViewModel, group, newgroup, task)
+    }
+
     fun ToggleDone(group: String, task: String, done: Boolean) {
         DBManager(
             PreferenceManager.getDefaultSharedPreferences(this).getBoolean("local", true)

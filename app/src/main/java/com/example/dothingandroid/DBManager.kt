@@ -289,6 +289,22 @@ class DBManager(loc: Boolean) {
         return outstr
     }
 
+    fun MoveGroup(viewDB: GroupViewModel, newindex: Int, group: String) {
+        GlobalScope.launch {
+            val user = NON_SAFE_Get_User_Data(viewDB)
+            val groupDAO = viewDB.GetGroupDAO()
+            val groups: MutableList<Group> = groupDAO.GetRawSortedGroups() as MutableList<Group>
+            val to_move = groupDAO.GetRawGroupByName(group)
+            groups.remove(to_move)
+            groups.add(newindex, to_move)
+            for (g in groups) {
+                viewDB.GetGroupDAO().UpdatePos(g.Name, groups.indexOf(g))
+                NON_SAFE_PushGroup(user.Name, g.Name, user.Token, viewDB)
+            }
+
+        }
+    }
+
     fun ConstructTaskList(taskstring: String): MutableList<Task> {
         val out: MutableList<Task> = ArrayList()
         val taskrawstringlist = taskstring.split("/")
@@ -319,6 +335,9 @@ class DBManager(loc: Boolean) {
     }
 
     fun DeconstructTaskList(tasklist: MutableList<Task>): String {
+        if (tasklist.size == 0) {
+            return "NONE"
+        }
         val taskrawlist: MutableList<String> = ArrayList()
         for (i in tasklist) {
             taskrawlist.add(i.ConSelfToString())
@@ -361,6 +380,51 @@ class DBManager(loc: Boolean) {
             val items_string = groupchange.Items
             val items = ConstructTaskList(items_string)
             items[items.indexOf(FindItemFromListById(taskname.toInt(), items))].name = newname
+            viewDB.GetGroupDAO().UpdateItems(group, DeconstructTaskList(items))
+            NON_SAFE_PushGroup(username, group, token, viewDB)
+        }
+    }
+
+
+    fun MoveTask(viewDB: GroupViewModel, group: String, newgroup: String, taskname: String) {
+        GlobalScope.launch {
+            val user = NON_SAFE_Get_User_Data(viewDB)
+            val username = user.Name
+            val token = user.Token
+            val groupchange = viewDB.GetGroupDAO().GetRawGroupByName(group)
+            val items_string = groupchange.Items
+            val items = ConstructTaskList(items_string)
+            val move: Task =
+                items.removeAt(items.indexOf(FindItemFromListById(taskname.toInt(), items)))
+            val newgorupchange = viewDB.GetGroupDAO().GetRawGroupByName(newgroup)
+            val new_group_items_string = newgorupchange.Items
+            val new_group_items = ConstructTaskList(new_group_items_string)
+            new_group_items.add(move)
+            viewDB.GetGroupDAO().UpdateItems(group, DeconstructTaskList(items))
+            viewDB.GetGroupDAO().UpdateItems(newgroup, DeconstructTaskList(new_group_items))
+            NON_SAFE_PushGroup(username, group, token, viewDB)
+            NON_SAFE_PushGroup(username, newgroup, token, viewDB)
+        }
+    }
+
+
+    fun ChangeTaskOrder(
+        viewDB: GroupViewModel,
+        group: String,
+        taskname: String,
+        newindex: Int,
+        newgroup: String
+    ) {
+        GlobalScope.launch {
+            val user = NON_SAFE_Get_User_Data(viewDB)
+            val username = user.Name
+            val token = user.Token
+            val groupchange = viewDB.GetGroupDAO().GetRawGroupByName(group)
+            val items_string = groupchange.Items
+            val items = ConstructTaskList(items_string)
+            val move: Task =
+                items.removeAt(items.indexOf(FindItemFromListById(taskname.toInt(), items)))
+            items.add(newindex, move)
             viewDB.GetGroupDAO().UpdateItems(group, DeconstructTaskList(items))
             NON_SAFE_PushGroup(username, group, token, viewDB)
         }
