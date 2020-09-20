@@ -10,6 +10,8 @@ import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 
 class SecondFragment : Fragment() {
@@ -32,15 +34,22 @@ class SecondFragment : Fragment() {
             val usernamefield = view.findViewById<EditText>(R.id.Login_Username)
             val passwordfield = view.findViewById<EditText>(R.id.Login_Password)
             Log.d("DEBUG", "LOGIN PRESSED")
-            DBManager(
-                PreferenceManager.getDefaultSharedPreferences(view.context)
-                    .getBoolean("local", true)
-            ).Login(
-                usernamefield.text.toString(),
-                passwordfield.text.toString(),
-                groupViewModel,
-                activity as MainActivity
-            )
+            GlobalScope.launch {
+                val db = DBManager(
+                    PreferenceManager.getDefaultSharedPreferences(view.context)
+                        .getBoolean("diffIP", false),
+                    PreferenceManager.getDefaultSharedPreferences(view.context)
+                        .getString("customIP", "None") as String,
+                    groupViewModel,
+                    activity as MainActivity
+                )
+                if (db.valid) {
+                    db.Login(
+                        usernamefield.text.toString(),
+                        passwordfield.text.toString()
+                    )
+                }
+            }
         }
     }
 }

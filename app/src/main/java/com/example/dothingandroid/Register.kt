@@ -10,6 +10,8 @@ import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class Register : Fragment() {
 
@@ -32,15 +34,22 @@ class Register : Fragment() {
             val usernamefield = view.findViewById<EditText>(R.id.Register_Username)
             val passwordfield = view.findViewById<EditText>(R.id.Register_Password)
             Log.d("DEBUG", "REGISTER PRESSED")
-            DBManager(
-                PreferenceManager.getDefaultSharedPreferences(view.context)
-                    .getBoolean("local", true)
-            ).Register(
-                usernamefield.text.toString(),
-                passwordfield.text.toString(),
-                groupViewModel,
-                activity as MainActivity
-            )
+            GlobalScope.launch {
+                val db = DBManager(
+                    PreferenceManager.getDefaultSharedPreferences(view.context)
+                        .getBoolean("diffIP", false),
+                    PreferenceManager.getDefaultSharedPreferences(view.context)
+                        .getString("customIP", "None") as String,
+                    groupViewModel,
+                    activity as MainActivity
+                )
+                if (db.valid) {
+                    db.Register(
+                        usernamefield.text.toString(),
+                        passwordfield.text.toString(),
+                    )
+                }
+            }
         }
 
     }

@@ -5,8 +5,14 @@
 
         <SwitchPreference
             android:defaultValue="false"
-            android:key="local"
-            android:summary="Use a different ip address and port for data servers"
-            android:title="Local Mode" />
+            android:key="diffIP"
+            android:summary="Use a different ip address and port for the data server"
+            android:title="Different Server IP" />
+        <EditTextPreference
+            android:dependency="diffIP"
+            android:key="customIP"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Custom Server IP" />
     </PreferenceCategory>
 </PreferenceScreen>

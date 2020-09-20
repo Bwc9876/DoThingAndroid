@@ -4,46 +4,100 @@ import android.app.Activity
 import android.content.Intent
 import android.util.Log
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.net.ConnectException
 import kotlin.random.Random
 
-class DBManager(loc: Boolean) {
+class DBManager(
+    customIP: Boolean,
+    serverIP: String,
+    viewDB_IN: GroupViewModel,
+    mView_IN: Activity,
+    bypassCheck: Boolean = false
+) {
 
-
-    var local: Boolean = true
+    var custom: Boolean = false
+    var bypass = false
+    var userServerIP: String = "None"
+    var viewDB: GroupViewModel
+    var valid = true
+    var mView: Activity
+    lateinit var job: Job
     private val default_ip: String = "71.225.44.187"
-    private val default_local_ip: String = "192.168.86.29"
-    private val default_auth_ip: String = "192.168.86.39"
 
     init {
-        local = loc
+        custom = customIP
+        userServerIP = serverIP
+        bypass = bypassCheck
+        viewDB = viewDB_IN
+        mView = mView_IN
+        if (!bypass) {
+            if (custom && userServerIP != "None") {
+                if (!TestServer(userServerIP)) {
+                    Error("The server either didn't respond or responded incorrectly")
+                }
+            } else {
+                if (!TestServer(default_ip)) {
+                    Error("The server either didn't respond or responded incorrectly, please try again later")
+                }
+            }
+        }
     }
 
-    fun GetIP(needed: String): String {
-        if (local) {
-            if (needed == "MAIN") {
-                return default_local_ip
-            } else {
-                return default_auth_ip
+    private fun Error(message: String) {
+        valid = false
+        val intent = Intent(mView, ErrorActivity::class.java)
+        intent.putExtra(ErrorActivity.EXTRA_REPLY, message)
+        mView.startActivity(intent)
+    }
+
+    private fun TestServer(ip: String): Boolean {
+        try {
+            val con = Connection(ip, 8080)
+            con.send("T/Hello/JAVA")
+            val response = con.WaitUntilRecv()
+            if (response == "Hello") {
+                return true
             }
+            return false
+        } catch (conerror: ConnectException) {
+            return false
+        }
+    }
+
+    private fun GetIP(): String {
+        if (custom && userServerIP != "None") {
+            if (!TestServer(userServerIP)) {
+                Error("The server either didn't respond or responded incorrectly")
+            }
+            return userServerIP
         } else {
+            if (!TestServer(default_ip)) {
+                Error("The server either didn't respond or responded incorrectly, please try again later")
+            }
             return default_ip
         }
     }
 
 
-    fun DeleteGroup(viewDB: GroupViewModel, name: String) {
-        GlobalScope.launch {
+    fun DeleteGroup(name: String) {
+        job = GlobalScope.launch {
             viewDB.GetGroupDAO().RemoveGroup(name)
             val user = viewDB.GetUserDAO().GetCurrentUser()[0]
-            val con = Connection(GetIP("MAIN"), 8080)
+            val con = Connection(GetIP(), 8080)
             con.send("D/${user.Name}/$name/${user.Token}/JAVA")
             val returned: String? = con.recv()
             if (returned == "IT") {
+                job.cancel("Auth Error")
+                valid = false
+                Error("The cached token was invalid")
                 Log.e("ERROR", "Invalid Token")
             } else if (returned == "IU") {
+                job.cancel()
+                valid = false
+                Error("The cached user does not exist")
                 Log.e("ERROR", "Invalid User")
             }
             con.send("Ready")
@@ -52,16 +106,22 @@ class DBManager(loc: Boolean) {
     }
 
 
-    fun RenameGroup(viewDB: GroupViewModel, newname: String, oldname: String) {
-        GlobalScope.launch {
+    fun RenameGroup(newname: String, oldname: String) {
+        job = GlobalScope.launch {
             val user = viewDB.GetUserDAO().GetCurrentUser()[0]
             viewDB.GetGroupDAO().UpdateName(newname, oldname)
-            val con = Connection(GetIP("MAIN"), 8080)
+            val con = Connection(GetIP(), 8080)
             con.send("N/${user.Name}/$oldname/${user.Token}/JAVA")
             val returned: String? = con.recv()
             if (returned == "IT") {
+                job.cancel("Auth Error")
+                valid = false
+                Error("The cached token was invalid")
                 Log.e("ERROR", "Invalid Token")
             } else if (returned == "IU") {
+                job.cancel()
+                valid = false
+                Error("The cached user does not exist")
                 Log.e("ERROR", "Invalid User")
             }
             con.send("Ready")
@@ -71,74 +131,69 @@ class DBManager(loc: Boolean) {
         }
     }
 
-    fun Continue_if_Data(viewDB: GroupViewModel, mView: Activity) {
-        GlobalScope.launch {
+    fun Continue_if_Data() {
+        job = GlobalScope.launch {
             val users = viewDB.GetUserDAO().GetCurrentUser()
             if (users.size > 0) {
                 Log.d("DEBUG", "User detected")
                 viewDB.GetGroupDAO().deleteAll()
-                PopulateDB(viewDB)
+                PopulateDB()
                 val intent = Intent(mView, TaskList::class.java)
                 mView.startActivity(intent)
             }
-            Log.d("DEBUG", "HA HA HA HA ONE")
         }
     }
 
-    fun Logout(viewDB: GroupViewModel, mAct: Activity) {
-        GlobalScope.launch {
+    fun Logout() {
+        job = GlobalScope.launch {
             viewDB.GetUserDAO().deleteAll()
-            val intent = Intent(mAct, MainActivity::class.java)
-            mAct.startActivity(intent)
+            val intent = Intent(mView, MainActivity::class.java)
+            mView.startActivity(intent)
         }
     }
 
-    fun Refresh(viewDB: GroupViewModel) {
-        GlobalScope.launch {
+    fun Refresh() {
+        job = GlobalScope.launch {
             viewDB.GetGroupDAO().deleteAll()
-            PopulateDB(viewDB)
+            PopulateDB()
         }
-
     }
 
-    fun PopulateDB(
-        viewDB: GroupViewModel,
-    ) {
-        GlobalScope.launch {
-            val user = viewDB.GetUserDAO().GetCurrentUser()[0]
-            val username = user.Name
-            val token = user.Token
-            val out: List<String?> = NON_SAFE_GetGroups(username, token)
-            for (task in out) {
-                task?.let {
-                    Log.d("DEBUG", it)
-                    var items: MutableList<String> = ArrayList()
-                    try {
-                        items = NON_SAFE_GetTasks(username, it, token)
-                    } catch (conerror: ConnectException) {
-                        //TODO: SHOW THIS TO USER
-                        Log.e("NETWORK", "Connection refused")
-                        this.cancel("Network Error")
-                    }
-                    Log.i("Info", "Items: " + items.joinToString("/"))
+    suspend fun PopulateDB() {
+        val user = viewDB.GetUserDAO().GetCurrentUser()[0]
+        val username = user.Name
+        val token = user.Token
+        val out: List<String?> = NON_SAFE_GetGroups(username, token)
+        for (task in out) {
+            task?.let {
+                Log.d("DEBUG", it)
+                var items: MutableList<String> = ArrayList()
+                items = NON_SAFE_GetTasks(username, it, token)
+                Log.i("Info", "Items: " + items.joinToString("/"))
                     val position = items.removeFirst().toInt()
                     val itemstring = items.joinToString(separator = "/")
                     viewDB.GetGroupDAO().insert(Group(it, position, itemstring))
                 }
             }
-        }
     }
 
     fun NON_SAFE_GetGroups(
         username: String,
         token: String,
     ): List<String?> {
-        val con = Connection(GetIP("MAIN"), 8080)
+        val ip: String = GetIP()
+        val con = Connection(ip, 8080)
         con.send("G/$username/NONE/$token/JAVA")
         val returned: String = con.recv()
         if (returned == "IT") {
+            job.cancel("Auth Error")
+            valid = false
+            Error("The cached token was invalid")
             Log.e("ERROR", "Invalid Token")
         } else if (returned == "IU") {
+            job.cancel()
+            valid = false
+            Error("The cached user does not exist")
             Log.e("ERROR", "Invalid User")
         }
         con.send("Ready")
@@ -159,12 +214,18 @@ class DBManager(loc: Boolean) {
         group: String,
         token: String
     ): MutableList<String> {
-        val con = Connection(GetIP("MAIN"), 8080)
+        val con = Connection(GetIP(), 8080)
         con.send("R/$username/$group/$token/JAVA")
         val returned: String? = con.recv()
         if (returned == "IT") {
+            job.cancel("Auth Error")
+            valid = false
+            Error("The cached token was invalid")
             Log.e("ERROR", "Invalid Token")
         } else if (returned == "IU") {
+            job.cancel()
+            valid = false
+            Error("The cached user does not exist")
             Log.e("ERROR", "Invalid User")
         }
         con.send("Ready")
@@ -205,10 +266,9 @@ class DBManager(loc: Boolean) {
     }
 
     fun AddGroup(
-        group: String,
-        viewDB: GroupViewModel
+        group: String
     ) {
-        GlobalScope.launch {
+        job = GlobalScope.launch {
             val user = NON_SAFE_Get_User_Data(viewDB)
             val username = user.Name
             val token = user.Token
@@ -220,22 +280,27 @@ class DBManager(loc: Boolean) {
                 newpos = highest + 1
             }
             viewDB.GetGroupDAO().UpdatePos(group, newpos)
-            NON_SAFE_PushGroup(username, group, token, viewDB)
+            NON_SAFE_PushGroup(username, group, token)
         }
     }
 
     fun NON_SAFE_PushGroup(
         username: String,
         group: String,
-        token: String,
-        viewDB: GroupViewModel
+        token: String
     ) {
-        val con = Connection(GetIP("MAIN"), 8080)
+        val con = Connection(GetIP(), 8080)
         con.send("W/$username/$group/$token/JAVA")
         val returned: String? = con.recv()
         if (returned == "IT") {
+            job.cancel("Auth Error")
+            valid = false
+            Error("The cached token was invalid")
             Log.e("ERROR", "Invalid Token")
         } else if (returned == "IU") {
+            job.cancel()
+            valid = false
+            Error("The cached user does not exist")
             Log.e("ERROR", "Invalid User")
         }
         con.send("Ready")
@@ -250,10 +315,9 @@ class DBManager(loc: Boolean) {
 
     fun AddTask(
         group: String,
-        viewDB: GroupViewModel,
         newtask: Task
     ) {
-        GlobalScope.launch {
+        job = GlobalScope.launch {
             val user = NON_SAFE_Get_User_Data(viewDB)
             val g = viewDB.GetGroupDAO().GetRawGroupByName(group)
             var items = g.Items
@@ -264,7 +328,7 @@ class DBManager(loc: Boolean) {
                 items = items + "/" + newtask.ConSelfToString()
             }
             viewDB.GetGroupDAO().UpdateItems(group, items)
-            NON_SAFE_PushGroup(user.Name, group, user.Token, viewDB)
+            NON_SAFE_PushGroup(user.Name, group, user.Token)
         }
     }
 
@@ -289,8 +353,8 @@ class DBManager(loc: Boolean) {
         return outstr
     }
 
-    fun MoveGroup(viewDB: GroupViewModel, newindex: Int, group: String) {
-        GlobalScope.launch {
+    fun MoveGroup(newindex: Int, group: String) {
+        job = GlobalScope.launch {
             val user = NON_SAFE_Get_User_Data(viewDB)
             val groupDAO = viewDB.GetGroupDAO()
             val groups: MutableList<Group> = groupDAO.GetRawSortedGroups() as MutableList<Group>
@@ -299,7 +363,7 @@ class DBManager(loc: Boolean) {
             groups.add(newindex, to_move)
             for (g in groups) {
                 viewDB.GetGroupDAO().UpdatePos(g.Name, groups.indexOf(g))
-                NON_SAFE_PushGroup(user.Name, g.Name, user.Token, viewDB)
+                NON_SAFE_PushGroup(user.Name, g.Name, user.Token)
             }
 
         }
@@ -349,10 +413,9 @@ class DBManager(loc: Boolean) {
 
     fun DeleteTask(
         group: String,
-        viewDB: GroupViewModel,
         taskname: String,
     ) {
-        GlobalScope.launch {
+        job = GlobalScope.launch {
             val user = NON_SAFE_Get_User_Data(viewDB)
             val username = user.Name
             val token = user.Token
@@ -361,18 +424,17 @@ class DBManager(loc: Boolean) {
             val items = ConstructTaskList(items_string)
             items.removeAt(items.indexOf(FindItemFromListById(taskname.toInt(), items)))
             viewDB.GetGroupDAO().UpdateItems(group, DeconstructTaskList(items))
-            NON_SAFE_PushGroup(username, group, token, viewDB)
+            NON_SAFE_PushGroup(username, group, token)
         }
     }
 
 
     fun EditTaskName(
         group: String,
-        viewDB: GroupViewModel,
         taskname: String,
         newname: String
     ) {
-        GlobalScope.launch {
+        job = GlobalScope.launch {
             val user = NON_SAFE_Get_User_Data(viewDB)
             val username = user.Name
             val token = user.Token
@@ -381,13 +443,13 @@ class DBManager(loc: Boolean) {
             val items = ConstructTaskList(items_string)
             items[items.indexOf(FindItemFromListById(taskname.toInt(), items))].name = newname
             viewDB.GetGroupDAO().UpdateItems(group, DeconstructTaskList(items))
-            NON_SAFE_PushGroup(username, group, token, viewDB)
+            NON_SAFE_PushGroup(username, group, token)
         }
     }
 
 
-    fun MoveTask(viewDB: GroupViewModel, group: String, newgroup: String, taskname: String) {
-        GlobalScope.launch {
+    fun MoveTask(group: String, newgroup: String, taskname: String) {
+        job = GlobalScope.launch {
             val user = NON_SAFE_Get_User_Data(viewDB)
             val username = user.Name
             val token = user.Token
@@ -402,20 +464,19 @@ class DBManager(loc: Boolean) {
             new_group_items.add(move)
             viewDB.GetGroupDAO().UpdateItems(group, DeconstructTaskList(items))
             viewDB.GetGroupDAO().UpdateItems(newgroup, DeconstructTaskList(new_group_items))
-            NON_SAFE_PushGroup(username, group, token, viewDB)
-            NON_SAFE_PushGroup(username, newgroup, token, viewDB)
+            NON_SAFE_PushGroup(username, group, token)
+            NON_SAFE_PushGroup(username, newgroup, token)
         }
     }
 
 
     fun ChangeTaskOrder(
-        viewDB: GroupViewModel,
         group: String,
         taskname: String,
         newindex: Int,
         newgroup: String
     ) {
-        GlobalScope.launch {
+        job = GlobalScope.launch {
             val user = NON_SAFE_Get_User_Data(viewDB)
             val username = user.Name
             val token = user.Token
@@ -426,18 +487,17 @@ class DBManager(loc: Boolean) {
                 items.removeAt(items.indexOf(FindItemFromListById(taskname.toInt(), items)))
             items.add(newindex, move)
             viewDB.GetGroupDAO().UpdateItems(group, DeconstructTaskList(items))
-            NON_SAFE_PushGroup(username, group, token, viewDB)
+            NON_SAFE_PushGroup(username, group, token)
         }
     }
 
 
     fun ToggleTask(
         group: String,
-        viewDB: GroupViewModel,
         taskname: String,
         done: Boolean
     ) {
-        GlobalScope.launch {
+        job = GlobalScope.launch {
             val user = NON_SAFE_Get_User_Data(viewDB)
             val username = user.Name
             val token = user.Token
@@ -446,7 +506,7 @@ class DBManager(loc: Boolean) {
             val items = ConstructTaskList(items_string)
             items[items.indexOf(FindItemFromListById(taskname.toInt(), items))].done = done
             viewDB.GetGroupDAO().UpdateItems(group, DeconstructTaskList(items))
-            NON_SAFE_PushGroup(username, group, token, viewDB)
+            NON_SAFE_PushGroup(username, group, token)
         }
     }
 
@@ -455,45 +515,57 @@ class DBManager(loc: Boolean) {
         return viewDB.GetUserDAO().GetCurrentUser()[0]
     }
 
-    fun Login(username: String, password: String, viewDB: GroupViewModel, act: Activity) {
-        GlobalScope.launch {
-            val con = Connection(GetIP("AUTH"), 8081)
-            con.send("L/$username/$password/JAVA")
+    fun Login(username: String, password: String) {
+        job = GlobalScope.launch {
+            val con = Connection(GetIP(), 8080)
+            con.send("A/L/$username/$password/JAVA")
             val returned = con.WaitUntilRecv()
             con.dc()
             //TODO: Show error messages to user
             if (returned == "IL") {
+                job.cancel("Auth Error")
+                valid = false
+                Error("That login is invalid")
                 Log.e("AUTH", "Invalid Login")
             } else if (returned == "IE") {
+                job.cancel("Auth Error")
+                valid = false
+                Error("The Server Had An Internal Error")
                 Log.e("AUTH", "Internal Server Error")
             } else {
                 val userdata = returned.split("/")
                 val UserDAO = viewDB.GetUserDAO()
                 UserDAO.deleteAll()
                 UserDAO.insert(User(userdata[0], userdata[1]))
-                Continue_if_Data(viewDB, act)
+                Continue_if_Data()
             }
         }
     }
 
     fun NON_SAFE_Add_User(name: String, token: String) {
-        val con = Connection(GetIP("MAIN"), 8080)
+        val con = Connection(GetIP(), 8080)
         con.send("U/$name/NONE/$token/JAVA")
         con.WaitUntilRecv()
         con.send("Ready")
         con.dc()
     }
 
-    fun Register(username: String, password: String, viewDB: GroupViewModel, act: Activity) {
-        GlobalScope.launch {
-            val con = Connection(GetIP("AUTH"), 8081)
-            con.send("R/$username/$password/JAVA")
+    fun Register(username: String, password: String) {
+        job = GlobalScope.launch {
+            val con = Connection(GetIP(), 8080)
+            con.send("A/R/$username/$password/JAVA")
             val returned = con.WaitUntilRecv()
             con.dc()
             //TODO: Show error messages to user
             if (returned == "UE") {
+                job.cancel("Auth Error")
+                valid = false
+                Error("That user already exists")
                 Log.e("AUTH", "User Exists")
             } else if (returned == "IE") {
+                job.cancel("Auth Error")
+                valid = false
+                Error("The Server Had An Internal Error")
                 Log.e("AUTH", "Internal Server Error")
             } else {
                 val userdata = returned.split("/")
@@ -501,10 +573,8 @@ class DBManager(loc: Boolean) {
                 val UserDAO = viewDB.GetUserDAO()
                 UserDAO.deleteAll()
                 UserDAO.insert(User(userdata[0], userdata[1]))
-                Continue_if_Data(viewDB, act)
+                Continue_if_Data()
             }
         }
     }
-
-
 }

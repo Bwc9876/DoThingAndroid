@@ -19,12 +19,8 @@ class Connection(in_address: String, in_port: Int) {
     private var writer: PrintWriter = PrintWriter(s.getOutputStream(), true)
     private var scanner: Scanner = Scanner(reader)
 
-    fun send(message: String, spacesafe: Boolean = false) {
-        if (spacesafe) {
-            writer.println(message.replace(" ", "_"))
-        } else {
-            writer.println(message)
-        }
+    fun send(message: String) {
+        writer.println(message)
     }
 
     fun recv(): String {
@@ -63,7 +59,7 @@ class Connection(in_address: String, in_port: Int) {
 
     fun SendList(endcode: String, list: List<String>) {
         for (item in list) {
-            send(item, spacesafe = true)
+            send(item)
             WaitUntilRecv()
         }
         send(endcode)

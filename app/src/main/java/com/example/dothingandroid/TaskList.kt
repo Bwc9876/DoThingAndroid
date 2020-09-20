@@ -15,6 +15,8 @@ import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 
 class TaskList : AppCompatActivity() {
@@ -35,12 +37,12 @@ class TaskList : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_task_list)
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerview)
-        val adapter = GroupListAdapter(this)
+        val adapter = GroupListAdapter(this@TaskList)
         adapter.GroupListAdapter(context)
         recyclerView.adapter = adapter
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        groupViewModel = ViewModelProvider(this).get(GroupViewModel::class.java)
-        groupViewModel.allGroups.observe(this, Observer { groups ->
+        recyclerView.layoutManager = LinearLayoutManager(this@TaskList)
+        groupViewModel = ViewModelProvider(this@TaskList).get(GroupViewModel::class.java)
+        groupViewModel.allGroups.observe(this@TaskList, Observer { groups ->
             groups?.let { adapter.setGroups(it) }
         })
 
@@ -55,32 +57,63 @@ class TaskList : AppCompatActivity() {
     }
 
     fun MoveGroup(group: String, newindex: Int) {
-        DBManager(
-            PreferenceManager.getDefaultSharedPreferences(this).getBoolean("local", true)
-        ).MoveGroup(groupViewModel, newindex, group)
+        GlobalScope.launch {
+            val db = DBManager(
+                PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                    .getBoolean("diffIP", false),
+                PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                    .getString("customIP", "None") as String, groupViewModel, this@TaskList
+            )
+            if (db.valid) {
+                db.MoveGroup(newindex, group)
+            }
+        }
     }
 
     fun ChangeTaskOrder(task: String, newindex: Int, group: String, newgroup: String) {
-        DBManager(
-            PreferenceManager.getDefaultSharedPreferences(this).getBoolean("local", true)
-        ).ChangeTaskOrder(groupViewModel, group, task, newindex, newgroup)
+        GlobalScope.launch {
+            val db = DBManager(
+                PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                    .getBoolean("diffIP", false),
+                PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                    .getString("customIP", "None") as String, groupViewModel, this@TaskList
+            )
+            if (db.valid) {
+                db.ChangeTaskOrder(group, task, newindex, newgroup)
+            }
+        }
     }
 
     fun MoveTask(group: String, newgroup: String, task: String) {
-        DBManager(
-            PreferenceManager.getDefaultSharedPreferences(this).getBoolean("local", true)
-        ).MoveTask(groupViewModel, group, newgroup, task)
+        GlobalScope.launch {
+            val db = DBManager(
+                PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                    .getBoolean("diffIP", false),
+                PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                    .getString("customIP", "None") as String, groupViewModel, this@TaskList
+            )
+            if (db.valid) {
+                db.MoveTask(group, newgroup, task)
+            }
+        }
     }
 
     fun ToggleDone(group: String, task: String, done: Boolean) {
-        DBManager(
-            PreferenceManager.getDefaultSharedPreferences(this).getBoolean("local", true)
-        ).ToggleTask(
-            group,
-            groupViewModel,
-            task,
-            done
-        )
+        GlobalScope.launch {
+            val db = DBManager(
+                PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                    .getBoolean("diffIP", false),
+                PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                    .getString("customIP", "None") as String, groupViewModel, this@TaskList
+            )
+            if (db.valid) {
+                db.ToggleTask(
+                    group,
+                    task,
+                    done
+                )
+            }
+        }
     }
 
     fun StartTaskAdd(group: String) {
@@ -108,38 +141,68 @@ class TaskList : AppCompatActivity() {
             data?.getStringExtra(GroupAddActivity.EXTRA_REPLY)?.let {
                 val group = Group(it, -1, "NONE")
                 groupViewModel.insert(group)
-                DBManager(
-                    PreferenceManager.getDefaultSharedPreferences(this).getBoolean("local", true)
-                ).AddGroup(
-                    group.Name,
-                    groupViewModel
-                )
+                GlobalScope.launch {
+                    val db = DBManager(
+                        PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                            .getBoolean("diffIP", false),
+                        PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                            .getString("customIP", "None") as String, groupViewModel, this@TaskList
+                    )
+                    if (db.valid) {
+                        db.AddGroup(
+                            group.Name
+                        )
+                    }
+                }
             }
         } else if (requestCode == TaskAddActivityRequestCode && resultCode == Activity.RESULT_OK) {
             data?.getStringExtra(TaskAddActivity.EXTRA_REPLY)?.let {
                 val task = Task(-1, it.split("/")[0], false)
-                DBManager(
-                    PreferenceManager.getDefaultSharedPreferences(this).getBoolean("local", true)
-                ).AddTask(
-                    it.split("/")[1],
-                    groupViewModel,
-                    task
-                )
+                GlobalScope.launch {
+                    val db = DBManager(
+                        PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                            .getBoolean("diffIP", false),
+                        PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                            .getString("customIP", "None") as String, groupViewModel, this@TaskList
+                    )
+                    if (db.valid) {
+                        db.AddTask(it.split("/")[1], task)
+                    }
+                }
             }
         } else if (requestCode == GroupEditActivityRequestCode && resultCode == Activity.RESULT_OK) {
             data?.getStringExtra(TaskAddActivity.EXTRA_REPLY)?.let {
                 val new = it.split('/')[0]
                 val old = it.split('/')[1]
                 if (new == "**DEL**") {
-                    DBManager(
-                        PreferenceManager.getDefaultSharedPreferences(this)
-                            .getBoolean("local", true)
-                    ).DeleteGroup(groupViewModel, old)
+                    GlobalScope.launch {
+                        val db = DBManager(
+                            PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                                .getBoolean("diffIP", false),
+                            PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                                .getString("customIP", "None") as String,
+                            groupViewModel,
+                            this@TaskList
+                        )
+                        if (db.valid) {
+                            db.DeleteGroup(old)
+                        }
+                    }
+
                 } else {
-                    DBManager(
-                        PreferenceManager.getDefaultSharedPreferences(this)
-                            .getBoolean("local", true)
-                    ).RenameGroup(groupViewModel, new, old)
+                    GlobalScope.launch {
+                        val db = DBManager(
+                            PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                                .getBoolean("diffIP", false),
+                            PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                                .getString("customIP", "None") as String,
+                            groupViewModel,
+                            this@TaskList
+                        )
+                        if (db.valid) {
+                            db.RenameGroup(new, old)
+                        }
+                    }
                 }
             }
         } else if (requestCode == TaskEditActivityRequestCode && resultCode == Activity.RESULT_OK) {
@@ -148,15 +211,33 @@ class TaskList : AppCompatActivity() {
                 val new = it.split('/')[1]
                 val old = it.split('/')[2]
                 if (new == "**DEL**") {
-                    DBManager(
-                        PreferenceManager.getDefaultSharedPreferences(this)
-                            .getBoolean("local", true)
-                    ).DeleteTask(group, groupViewModel, old)
+                    GlobalScope.launch {
+                        val db = DBManager(
+                            PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                                .getBoolean("diffIP", false),
+                            PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                                .getString("customIP", "None") as String,
+                            groupViewModel,
+                            this@TaskList
+                        )
+                        if (db.valid) {
+                            db.DeleteTask(group, old)
+                        }
+                    }
                 } else {
-                    DBManager(
-                        PreferenceManager.getDefaultSharedPreferences(this)
-                            .getBoolean("local", true)
-                    ).EditTaskName(group, groupViewModel, old, new)
+                    GlobalScope.launch {
+                        val db = DBManager(
+                            PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                                .getBoolean("diffIP", false),
+                            PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                                .getString("customIP", "None") as String,
+                            groupViewModel,
+                            this@TaskList
+                        )
+                        if (db.valid) {
+                            db.EditTaskName(group, old, new)
+                        }
+                    }
                 }
 
             }
@@ -172,7 +253,7 @@ class TaskList : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
+        // Inflate the menu; this@TaskList adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
         return true
     }
@@ -183,19 +264,38 @@ class TaskList : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_logout -> {
-                DBManager(
-                    PreferenceManager.getDefaultSharedPreferences(this).getBoolean("local", true)
-                ).Logout(groupViewModel, this)
+                GlobalScope.launch {
+                    val db = DBManager(
+                        PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                            .getBoolean("diffIP", false),
+                        PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                            .getString("customIP", "None") as String,
+                        groupViewModel,
+                        this@TaskList,
+                        bypassCheck = true
+                    )
+                    if (db.valid) {
+                        db.Logout()
+                    }
+                }
                 true
             }
             R.id.action_refresh -> {
-                DBManager(
-                    PreferenceManager.getDefaultSharedPreferences(this).getBoolean("local", true)
-                ).Refresh(groupViewModel)
+                GlobalScope.launch {
+                    val db = DBManager(
+                        PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                            .getBoolean("diffIP", false),
+                        PreferenceManager.getDefaultSharedPreferences(this@TaskList)
+                            .getString("customIP", "None") as String, groupViewModel, this@TaskList
+                    )
+                    if (db.valid) {
+                        db.Refresh()
+                    }
+                }
                 true
             }
             R.id.action_settings -> {
-                val intent = Intent(this, SettingsActivity::class.java)
+                val intent = Intent(this@TaskList, SettingsActivity::class.java)
                 startActivity(intent)
                 true
             }

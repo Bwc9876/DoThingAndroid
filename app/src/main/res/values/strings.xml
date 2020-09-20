@@ -34,4 +34,8 @@
     <string name="Cancel">No</string>
     <string name="Question">Are you sure you want to delete this item?</string>
     <string name="Delete">Delete</string>
+    <string name="ErrorTitle">An Error Has Occurred</string>
+    <string name="TryAgain">Try Again</string>
+    <string name="Logout">Logout</string>
+    <string name="Exit">Exit</string>
 </resources>

@@ -7,6 +7,8 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -16,9 +18,20 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         groupViewModel = ViewModelProvider(this).get(GroupViewModel::class.java)
-        DBManager(
-            PreferenceManager.getDefaultSharedPreferences(this).getBoolean("local", true)
-        ).Continue_if_Data(groupViewModel, this)
+        GlobalScope.launch {
+            val db = DBManager(
+                PreferenceManager.getDefaultSharedPreferences(this@MainActivity)
+                    .getBoolean("diffIP", false),
+                PreferenceManager.getDefaultSharedPreferences(this@MainActivity)
+                    .getString("customIP", "None") as String,
+                groupViewModel,
+                this@MainActivity,
+                bypassCheck = true
+            )
+            if (db.valid) {
+                db.Continue_if_Data()
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

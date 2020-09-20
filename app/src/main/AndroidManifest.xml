@@ -13,7 +13,8 @@
         android:roundIcon="@mipmap/ic_app_icon_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".TaskEditActivity"></activity>
+        <activity android:name=".ErrorActivity"></activity>
+        <activity android:name=".TaskEditActivity" />
         <activity android:name=".EditGroupActivity" />
         <activity android:name=".SettingsActivity" />
         <activity android:name=".TaskAddActivity" />
