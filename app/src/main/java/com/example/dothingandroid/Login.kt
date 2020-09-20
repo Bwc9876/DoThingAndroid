@@ -14,7 +14,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 
-class SecondFragment : Fragment() {
+class Login : Fragment() {
 
     private lateinit var groupViewModel: GroupViewModel
 

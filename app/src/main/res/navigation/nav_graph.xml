@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/Splash"
-        android:name="com.example.dothingandroid.FirstFragment"
+        android:name="com.example.dothingandroid.SplashPage"
         android:label="@string/first_fragment_label"
         tools:layout="@layout/fragment_first">
         <action
@@ -22,7 +22,7 @@
     </fragment>
     <fragment
         android:id="@+id/Login"
-        android:name="com.example.dothingandroid.SecondFragment"
+        android:name="com.example.dothingandroid.Login"
         android:label="@string/hello_second_fragment"
         tools:layout="@layout/fragment_second">
         <action
