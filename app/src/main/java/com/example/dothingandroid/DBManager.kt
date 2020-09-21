@@ -69,14 +69,8 @@ class DBManager(
 
     private fun GetIP(): String {
         if (custom && userServerIP != "None") {
-            if (!TestServer(userServerIP)) {
-                Error("The server either didn't respond or responded incorrectly")
-            }
             return userServerIP
         } else {
-            if (!TestServer(default_ip)) {
-                Error("The server either didn't respond or responded incorrectly, please try again later")
-            }
             return default_ip
         }
     }
